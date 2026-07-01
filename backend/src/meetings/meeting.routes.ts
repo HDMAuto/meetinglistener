@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../auth/middleware.js";
+import { prisma } from "../db/client.js";
 import { createMeeting, listMeetings, getMeeting } from "./meeting.service.js";
 
 export const meetingRouter = Router();
@@ -27,4 +28,12 @@ meetingRouter.get("/:id", async (req, res) => {
   const meeting = await getMeeting(req.params.id, req.userId!);
   if (!meeting) return res.status(404).json({ error: "NOT_FOUND" });
   return res.json(meeting);
+});
+
+meetingRouter.get("/:id/transcript", async (req, res) => {
+  const meeting = await getMeeting(req.params.id, req.userId!);
+  if (!meeting) return res.status(404).json({ error: "NOT_FOUND" });
+  const transcript = await prisma.transcript.findUnique({ where: { meetingId: meeting.id } });
+  if (!transcript) return res.status(404).json({ error: "NO_TRANSCRIPT" });
+  return res.json(transcript);
 });

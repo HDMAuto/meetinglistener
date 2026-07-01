@@ -13,6 +13,11 @@ export function toPublicUser(user: User): PublicUser {
     return { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt};
 }
 
+export async function listUsers(): Promise<PublicUser[]> {
+    const users = await prisma.user.findMany({ orderBy: { name: "asc" } });
+    return users.map(toPublicUser);
+}
+
 export async function createUser(input: {
     name:       string;
     email:      string;

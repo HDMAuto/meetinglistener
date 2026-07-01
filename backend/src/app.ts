@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import { authRouter } from "./users/auth.routes.js";
+import { userRouter } from "./users/user.routes.js";
 import { meetingRouter } from "./meetings/meeting.routes.js";
 import { audioRouter } from "./meetings/audio.routes.js";
 import { meetingTaskRouter, taskRouter } from "./tasks/task.routes.js";
@@ -16,6 +17,7 @@ export function createApp(): Express {
   });
 
   app.use("/auth", authRouter);
+  app.use("/users", userRouter);
   app.use("/meetings", meetingRouter);
   app.use("/meetings", audioRouter);
   app.use("/meetings", meetingTaskRouter);
