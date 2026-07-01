@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import { authRouter } from "./users/auth.routes.js";
+import { meetingRouter } from "./meetings/meeting.routes.js";
 
 export function createApp(): Express {
   const app = express();
@@ -10,6 +11,7 @@ export function createApp(): Express {
   });
 
   app.use("/auth", authRouter);
+  app.use("/meetings", meetingRouter);
 
   return app;
 }
