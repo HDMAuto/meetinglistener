@@ -6,7 +6,9 @@
 
 **Architecture:** Express HTTP API in TypeScript. Prisma ORM over SQLite for local dev (swappable to Postgres later). Layered by feature: each feature has a `*.service.ts` (data/logic) and `*.routes.ts` (HTTP). Auth via bcrypt-hashed passwords + JWT bearer tokens. Test-first with Vitest + supertest.
 
-**Tech Stack:** Node.js, TypeScript, Express, Prisma, SQLite, zod, bcryptjs, jsonwebtoken, Vitest, supertest.
+**Tech Stack:** Node.js, TypeScript, Express, Prisma, PostgreSQL, zod, bcryptjs, jsonwebtoken, Vitest, supertest.
+
+> **Deviation note (2026-07-01):** During execution we switched the database from SQLite to **PostgreSQL** (the user has Postgres locally; it matches production). Concretely this changed: `schema.prisma` `provider = "postgresql"`; `.env`/`.env.test` use `postgresql://USER@localhost:5432/meetinglistener_dev|_test?schema=public`; `vitest.config.ts` loads `.env.test` and sets `test.env` so the suite runs against the isolated `meetinglistener_test` database; `tests/setup/global-setup.ts` force-resets that test DB. The as-built versions of `vitest.config.ts`, `tests/setup/global-setup.ts`, and `tests/setup/per-test.ts` live in the repo and supersede the SQLite snippets shown in Tasks 1–2 below. Two databases must exist: `createdb meetinglistener_dev && createdb meetinglistener_test`.
 
 ## Global Constraints
 
