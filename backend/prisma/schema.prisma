@@ -8,26 +8,69 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  pushToken    String?
-  createdAt    DateTime  @default(now())
-  meetings     Meeting[]
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  passwordHash  String
+  pushToken     String?
+  createdAt     DateTime       @default(now())
+  meetings      Meeting[]
+  assignedTasks Task[]         @relation("TaskAssignee")
+  notifications Notification[]
 }
 
 model Meeting {
-  id          String   @id @default(cuid())
-  ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id])
-  title       String
-  status      String   @default("recording")
-  audioUrl    String?
-  durationSec Int?
-  goal        String?
-  summary     String?
-  createdAt   DateTime @default(now())
+  id           String       @id @default(cuid())
+  ownerId      String
+  owner        User         @relation(fields: [ownerId], references: [id])
+  title        String
+  status       String       @default("recording")
+  audioUrl     String?
+  durationSec  Int?
+  goal         String?
+  summary      String?
+  errorMessage String?
+  transcript   Transcript?
+  tasks        Task[]
+  createdAt    DateTime     @default(now())
 
   @@index([ownerId])
+}
+
+model Transcript {
+  id        String   @id @default(cuid())
+  meetingId String   @unique
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  fullText  String
+  segments  Json?
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id                   String    @id @default(cuid())
+  meetingId            String
+  meeting              Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  description          String
+  assigneeId           String?
+  assignee             User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeText         String?
+  suggestedAssigneeIds String[]
+  status               String    @default("needs_assignee")
+  notifiedAt           DateTime?
+  createdAt            DateTime  @default(now())
+
+  @@index([meetingId])
+  @@index([assigneeId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  taskId    String
+  meetingId String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
