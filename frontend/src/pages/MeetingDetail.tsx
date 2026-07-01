@@ -1,19 +1,30 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import type { Meeting, Task, User } from "../lib/types";
 import { STATUS_LABEL, formatDateTime, formatDuration, initials, isProcessing } from "../lib/format";
 import { MeetingStatusBadge, TaskStatusBadge } from "../components/StatusBadge";
-import { Button, Card, Spinner, cn } from "../components/ui";
+import { Button, Card, Modal, Spinner, cn } from "../components/ui";
 
 export function MeetingDetail() {
   const { id = "" } = useParams();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { data: meeting, isLoading } = useQuery({
     queryKey: ["meeting", id],
     queryFn: () => api.getMeeting(id),
     refetchInterval: (q) => (q.state.data && isProcessing(q.state.data.status) ? 3000 : false),
+  });
+
+  const deleteMeeting = useMutation({
+    mutationFn: () => api.deleteMeeting(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["meetings"] });
+      navigate("/");
+    },
   });
 
   if (isLoading) {
@@ -55,7 +66,23 @@ export function MeetingDetail() {
             <span>{formatDuration(meeting.durationSec)}</span>
           </div>
         </div>
-        <MeetingStatusBadge status={meeting.status} />
+        <div className="flex items-center gap-2">
+          <MeetingStatusBadge status={meeting.status} />
+          <button
+            onClick={() => setConfirmOpen(true)}
+            aria-label="Delete meeting"
+            title="Delete meeting"
+            className="cursor-pointer rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path
+                d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {isProcessing(meeting.status) ? (
@@ -65,6 +92,30 @@ export function MeetingDetail() {
       ) : (
         <ReadyState meeting={meeting} />
       )}
+
+      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Delete meeting?">
+        <p className="text-sm text-slate-600">
+          This permanently deletes <span className="font-semibold text-ink">{meeting.title}</span> —
+          its transcript, tasks, and notifications. This can’t be undone.
+        </p>
+        {deleteMeeting.isError && (
+          <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+            Couldn’t delete the meeting. Please try again.
+          </div>
+        )}
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => deleteMeeting.mutate()}
+            loading={deleteMeeting.isPending}
+            className="bg-red-600 text-white hover:bg-red-700"
+          >
+            Delete meeting
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }

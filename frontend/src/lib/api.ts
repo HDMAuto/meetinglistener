@@ -65,6 +65,7 @@ export const api = {
   createMeeting: (title: string) =>
     request<Meeting>("/meetings", { method: "POST", body: JSON.stringify({ title }) }),
   getTranscript: (id: string) => request<Transcript>(`/meetings/${id}/transcript`),
+  deleteMeeting: (id: string) => request<void>(`/meetings/${id}`, { method: "DELETE" }),
   uploadAudio: (id: string, file: Blob, filename: string) => {
     const form = new FormData();
     form.append("audio", file, filename);
