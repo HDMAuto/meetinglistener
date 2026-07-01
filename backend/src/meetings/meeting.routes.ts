@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../auth/middleware.js";
 import { prisma } from "../db/client.js";
-import { createMeeting, listMeetings, getMeeting } from "./meeting.service.js";
+import { createMeeting, listMeetings, getMeeting, deleteMeeting } from "./meeting.service.js";
 
 export const meetingRouter = Router();
 
@@ -36,4 +36,10 @@ meetingRouter.get("/:id/transcript", async (req, res) => {
   const transcript = await prisma.transcript.findUnique({ where: { meetingId: meeting.id } });
   if (!transcript) return res.status(404).json({ error: "NO_TRANSCRIPT" });
   return res.json(transcript);
+});
+
+meetingRouter.delete("/:id", async (req, res) => {
+  const deleted = await deleteMeeting(req.params.id, req.userId!);
+  if (!deleted) return res.status(404).json({ error: "NOT_FOUND" });
+  return res.status(204).end();
 });

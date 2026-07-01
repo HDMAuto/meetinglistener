@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 import { env } from "../config/env.js";
 
@@ -16,4 +16,9 @@ export async function saveAudio(
 
 export function getAudioAbsolutePath(storedPath: string): string {
   return resolve(storedPath);
+}
+
+// Best-effort delete; ignores a missing file.
+export async function deleteAudio(storedPath: string): Promise<void> {
+  await rm(getAudioAbsolutePath(storedPath), { force: true });
 }
