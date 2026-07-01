@@ -1,4 +1,5 @@
 import express, { type Express } from "express";
+import cors from "cors";
 import { authRouter } from "./users/auth.routes.js";
 import { meetingRouter } from "./meetings/meeting.routes.js";
 import { audioRouter } from "./meetings/audio.routes.js";
@@ -7,6 +8,7 @@ import { notificationRouter } from "./notifications/notification.routes.js";
 
 export function createApp(): Express {
   const app = express();
+  app.use(cors());
   app.use(express.json());
 
   app.get("/health", (_req, res) => {
