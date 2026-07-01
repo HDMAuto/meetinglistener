@@ -1,0 +1,47 @@
+import type { User } from "@prisma/client";
+import { prisma } from "../db/client.js";
+import { hashPassword, verifyPassword } from "../auth/password.js";
+
+export interface PublicUser {
+    id:             string;
+    name:           string;
+    email:          string;
+    createdAt:      Date;
+}
+
+export function toPublicUser(user: User): PublicUser {
+    return { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt};
+}
+
+export async function createUser(input: {
+    name:       string;
+    email:      string;
+    password:   string;
+}): Promise<PublicUser> {
+    const existing = await prisma.user.findUnique({ where: { email: input.email } });
+    if (existing) throw new Error("EMAIL_TAKEN");
+
+    const user = await prisma.user.create({
+        data: {
+            name:           input.name,
+            email:          input.email,
+            passwordHash:   await hashPassword(input.password),
+        },
+    });
+    return toPublicUser(user);
+}
+
+export async function verifyCredentials(
+  email: string,
+  password: string,
+): Promise<PublicUser | null> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return null;
+  if (!(await verifyPassword(password, user.passwordHash))) return null;
+  return toPublicUser(user);
+}
+
+export async function findUserById(id: string): Promise<PublicUser | null> {
+  const user = await prisma.user.findUnique({ where: { id } });
+  return user ? toPublicUser(user) : null;
+}
