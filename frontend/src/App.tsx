@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { AppLayout } from "./components/AppLayout";
 import { Login } from "./pages/Login";
@@ -6,11 +6,15 @@ import { Dashboard } from "./pages/Dashboard";
 import { MeetingDetail } from "./pages/MeetingDetail";
 import { Notifications } from "./pages/Notifications";
 
+// Electron loads the built app from file:// where history-based routing breaks;
+// use hash routing there and keep clean URLs on the web.
+const Router = window.location.protocol === "file:" ? HashRouter : BrowserRouter;
+
 export default function App() {
   const { user } = useAuth();
 
   return (
-    <BrowserRouter>
+    <Router>
       {!user ? (
         <Routes>
           <Route path="*" element={<Login />} />
@@ -25,6 +29,6 @@ export default function App() {
           </Route>
         </Routes>
       )}
-    </BrowserRouter>
+    </Router>
   );
 }

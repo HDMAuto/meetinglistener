@@ -1,0 +1,34 @@
+{
+  "name": "meetinglistener-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MeetingListener desktop app (Electron shell around the web dashboard)",
+  "main": "dist/main.js",
+  "scripts": {
+    "build:main": "tsc",
+    "build:renderer": "npm --prefix ../frontend run build && rm -rf renderer && cp -R ../frontend/dist renderer",
+    "dev": "npm run build:main && ELECTRON_START_URL=http://localhost:5173 electron .",
+    "start": "npm run build:renderer && npm run build:main && electron .",
+    "smoke": "npm run build:renderer && npm run build:main && SMOKE_TEST=1 electron .",
+    "dist": "npm run build:renderer && npm run build:main && electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.5.0"
+  },
+  "build": {
+    "appId": "app.meetinglistener.desktop",
+    "productName": "MeetingListener",
+    "files": ["dist/**", "renderer/**", "package.json"],
+    "directories": { "output": "release" },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "MeetingListener records meeting audio so it can transcribe and summarize your meetings."
+      }
+    },
+    "win": { "target": "nsis" }
+  }
+}
