@@ -6,6 +6,7 @@ const schema = z.object({
   JWT_SECRET: z.string().min(1),
   PORT: z.coerce.number().default(3000),
   UPLOAD_DIR: z.string().default("uploads"),
+  DOWNLOADS_DIR: z.string().default("downloads"),
   ANTHROPIC_API_KEY: z.string().optional(),
   ASSEMBLYAI_API_KEY: z.string().optional(),
   // Comma-separated list of allowed web origins for CORS. Unset = allow all
