@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "prisma generate && tsc",
+    "start": "node --env-file=.env dist/server.js",
+    "migrate:deploy": "prisma migrate deploy",
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:push": "prisma db push"
