@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- macOS-style icon: rounded tile at 824px centered in a 1024 canvas -->
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="#1C3050"/>
+  <g transform="translate(512 512) scale(0.78) translate(-512 -512)">
+    <!-- ring: four arcs, gaps where the needle crosses and at N/S -->
+    <g fill="none" stroke-width="62" stroke-linecap="butt">
+      <path d="M 638.7 273.6 A 270 270 0 0 0 502.6 242.2" stroke="#14B8A6"/>
+      <path d="M 428.6 255.2 A 270 270 0 0 0 271.4 634.6" stroke="#F8FAFC"/>
+      <path d="M 389.4 752.6 A 270 270 0 0 0 521.4 781.8" stroke="#F8FAFC"/>
+      <path d="M 595.4 768.8 A 270 270 0 0 0 752.6 389.4" stroke="#14B8A6"/>
+    </g>
+    <!-- needle: teal half pointing NE, white half pointing SW -->
+    <polygon points="780.7,243.3 577.0,548.8 475.2,447.0" fill="#14B8A6"/>
+    <polygon points="271.6,752.4 548.8,577.0 447.0,475.2" fill="#F8FAFC"/>
+  </g>
+</svg>

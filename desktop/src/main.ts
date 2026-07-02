@@ -92,6 +92,16 @@ async function loadDevUrlWithRetry(win: BrowserWindow, url: string): Promise<voi
 }
 
 app.whenReady().then(async () => {
+  // Packaged builds get the bundle icon; in dev, set the Dock icon manually.
+  if (process.platform === "darwin" && DEV_URL) {
+    const devIcon = path.join(__dirname, "..", "build", "icon.png");
+    try {
+      app.dock?.setIcon(devIcon);
+    } catch {
+      /* icon is cosmetic — never block startup on it */
+    }
+  }
+
   // Ask macOS for mic access up front so in-app recording just works.
   if (process.platform === "darwin" && !SMOKE) {
     await systemPreferences.askForMediaAccess("microphone").catch(() => {});
