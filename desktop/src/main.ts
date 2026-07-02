@@ -38,11 +38,15 @@ async function createWindow(): Promise<void> {
       }
     });
     win.webContents.on("did-finish-load", async () => {
-      // Give React a beat to mount, then check the app actually rendered.
-      await new Promise((r) => setTimeout(r, 1500));
-      const mounted = await win.webContents.executeJavaScript(
-        "!!document.querySelector('#root')?.children.length",
-      );
+      if (win.webContents.getURL().startsWith("data:")) return; // dev waiting page
+      // Poll up to 20s for React to mount (cold dev servers compile on demand).
+      let mounted = false;
+      for (let i = 0; i < 40 && !mounted; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        mounted = await win.webContents.executeJavaScript(
+          "!!document.querySelector('#root')?.children.length",
+        );
+      }
       console.log(
         mounted && renderErrors === 0 ? "SMOKE_OK" : "SMOKE_FAIL",
         win.webContents.getURL(),
@@ -53,9 +57,37 @@ async function createWindow(): Promise<void> {
   }
 
   if (DEV_URL) {
-    await win.loadURL(DEV_URL);
+    await loadDevUrlWithRetry(win, DEV_URL);
   } else {
     await win.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
+  }
+}
+
+// In dev the Vite server may not be up yet (or may restart) — show a small
+// waiting page and keep retrying instead of dying with ERR_CONNECTION_REFUSED.
+async function loadDevUrlWithRetry(win: BrowserWindow, url: string): Promise<void> {
+  const waitingPage =
+    "data:text/html;charset=utf-8," +
+    encodeURIComponent(
+      `<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;background:#f8fafc;color:#334155">
+        <div style="text-align:center">
+          <div style="font-size:15px;font-weight:600">Waiting for the dev server…</div>
+          <div style="margin-top:6px;font-size:13px;color:#64748b">Start it with <code>npm run frontend</code> (repo root). Retrying automatically.</div>
+        </div>
+      </body>`,
+    );
+
+  for (let attempt = 1; !win.isDestroyed(); attempt++) {
+    try {
+      await win.loadURL(url);
+      return;
+    } catch {
+      if (attempt === 1) {
+        console.log(`Dev server not reachable at ${url} — waiting for it to start…`);
+        await win.loadURL(waitingPage).catch(() => {});
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
   }
 }
 
