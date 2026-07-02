@@ -1,0 +1,13 @@
+{
+  "name": "meetinglistener",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MeetingListener — record meetings, transcribe, summarize, assign tasks",
+  "scripts": {
+    "backend": "cd backend && node --env-file=.env --import tsx src/server.ts",
+    "frontend": "npm --prefix frontend run dev",
+    "desktop": "npm --prefix desktop run dev",
+    "dist": "npm --prefix desktop run dist",
+    "test": "npm --prefix backend test"
+  }
+}
