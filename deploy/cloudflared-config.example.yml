@@ -1,0 +1,13 @@
+# Cloudflare Tunnel config for MeetingListener.
+# Copy to ~/.cloudflared/config.yml on the server and fill in the tunnel UUID.
+# (See docs/DEPLOYMENT.md for how the UUID and credentials file are produced.)
+
+tunnel: __TUNNEL_UUID__
+credentials-file: /Users/__USER__/.cloudflared/__TUNNEL_UUID__.json
+
+ingress:
+  # Public API hostname -> local backend
+  - hostname: meetings-api.hdmauto.app
+    service: http://localhost:3000
+  # Everything else returns 404
+  - service: http_status:404

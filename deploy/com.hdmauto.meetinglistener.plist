@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd service for the MeetingListener backend.
+  Replace the __PLACEHOLDERS__ (see docs/DEPLOYMENT.md), then install to:
+    /Library/LaunchDaemons/com.hdmauto.meetinglistener.plist
+  Placeholders:
+    __NODE__   absolute path to node 20+   (find with: which node)
+    __APPDIR__ absolute path to the backend (e.g. /Users/hdm/MeetingListener/backend)
+    __USER__   the macOS user to run as     (e.g. hdm)
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.hdmauto.meetinglistener</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__NODE__</string>
+        <string>--env-file=.env</string>
+        <string>dist/server.js</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__APPDIR__</string>
+
+    <key>UserName</key>
+    <string>__USER__</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__APPDIR__/logs/backend.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__APPDIR__/logs/backend.err.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>

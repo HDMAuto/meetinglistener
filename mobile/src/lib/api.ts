@@ -8,9 +8,12 @@ import type {
   User,
 } from "./types";
 
-// iOS simulator shares the Mac's loopback, so localhost reaches the backend.
-// On a physical phone, replace with your Mac's LAN IP, e.g. http://192.168.1.20:3000
-export const API_BASE = "http://localhost:3000";
+// Production backend (Cloudflare Tunnel) by default so installed builds work
+// anywhere. For local development, set EXPO_PUBLIC_API_URL in mobile/.env
+// (e.g. http://localhost:3000 for the iOS simulator, or your Mac's LAN IP for
+// a physical phone).
+export const API_BASE =
+  process.env.EXPO_PUBLIC_API_URL ?? "https://meetings-api.hdmauto.app";
 
 const TOKEN_KEY = "ml_token";
 let cachedToken: string | null = null;
