@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import { api } from "../lib/api";
@@ -23,6 +24,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function MeetingsScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const { user, logout } = useAuth();
   const [search, setSearch] = useState("");
 
@@ -44,7 +46,7 @@ export function MeetingsScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <View style={{ flex: 1 }}>
           <Text style={styles.greeting}>Hi, {user?.name.split(" ")[0]}</Text>
           <Text style={styles.subtitle}>
@@ -121,7 +123,7 @@ export function MeetingsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.slate50, paddingHorizontal: 20 },
-  header: { flexDirection: "row", alignItems: "center", paddingTop: 12, paddingBottom: 8 },
+  header: { flexDirection: "row", alignItems: "center", paddingBottom: 8 },
   greeting: { fontFamily: fonts.bold, fontSize: 24, color: colors.ink },
   subtitle: { fontFamily: fonts.regular, fontSize: 13, color: colors.muted, marginTop: 2 },
   signOut: { fontFamily: fonts.medium, fontSize: 14, color: colors.muted },
