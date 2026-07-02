@@ -1,16 +1,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- macOS-style icon: rounded tile at 824px centered in a 1024 canvas -->
-  <rect x="100" y="100" width="824" height="824" rx="184" fill="#1C3050"/>
-  <g transform="translate(512 512) scale(0.78) translate(-512 -512)">
-    <!-- ring: four arcs, gaps where the needle crosses and at N/S -->
-    <g fill="none" stroke-width="62" stroke-linecap="butt">
-      <path d="M 638.7 273.6 A 270 270 0 0 0 502.6 242.2" stroke="#14B8A6"/>
-      <path d="M 428.6 255.2 A 270 270 0 0 0 271.4 634.6" stroke="#F8FAFC"/>
-      <path d="M 389.4 752.6 A 270 270 0 0 0 521.4 781.8" stroke="#F8FAFC"/>
-      <path d="M 595.4 768.8 A 270 270 0 0 0 752.6 389.4" stroke="#14B8A6"/>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1E88E5"/>
+      <stop offset="1" stop-color="#2BD9BD"/>
+    </linearGradient>
+  </defs>
+
+  <!-- macOS-style icon: white rounded tile, 824px centered in a 1024 canvas -->
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="#FFFFFF"/>
+
+  <g transform="translate(512 512) scale(0.78) translate(-512 -404)">
+    <!-- headband arc over the top -->
+    <path d="M 179.4 399.3 A 340 340 0 0 1 844.6 399.3"
+          fill="none" stroke="url(#g)" stroke-width="46" stroke-linecap="round"/>
+
+    <!-- earcups -->
+    <rect x="140" y="390" width="95" height="160" rx="40" fill="#1E88E5"/>
+    <rect x="789" y="390" width="95" height="160" rx="40" fill="#2BD9BD"/>
+
+    <!-- speech-bubble tail (draw first so the ring overlaps its base) -->
+    <polygon points="303.6,567.2 380.1,658.4 266.8,690.8" fill="#1E88E5"/>
+
+    <!-- speech bubble ring -->
+    <circle cx="512" cy="470" r="210" fill="none" stroke="url(#g)" stroke-width="42"/>
+
+    <!-- waveform bars -->
+    <g fill="url(#g)">
+      <rect x="358" y="452" width="20" height="36" rx="10"/>
+      <rect x="394" y="435" width="20" height="70" rx="10"/>
+      <rect x="430" y="410" width="20" height="120" rx="10"/>
+      <rect x="466" y="380" width="20" height="180" rx="10"/>
+      <rect x="502" y="355" width="20" height="230" rx="10"/>
+      <rect x="538" y="380" width="20" height="180" rx="10"/>
+      <rect x="574" y="410" width="20" height="120" rx="10"/>
+      <rect x="610" y="435" width="20" height="70" rx="10"/>
+      <rect x="646" y="452" width="20" height="36" rx="10"/>
     </g>
-    <!-- needle: teal half pointing NE, white half pointing SW -->
-    <polygon points="780.7,243.3 577.0,548.8 475.2,447.0" fill="#14B8A6"/>
-    <polygon points="271.6,752.4 548.8,577.0 447.0,475.2" fill="#F8FAFC"/>
   </g>
 </svg>
