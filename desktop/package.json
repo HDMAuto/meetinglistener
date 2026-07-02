@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build:main": "tsc",
-    "build:renderer": "npm --prefix ../frontend run build && rm -rf renderer && cp -R ../frontend/dist renderer",
+    "build:renderer": "npm --prefix ../frontend run build && node scripts/copy-renderer.mjs",
     "dev": "npm run build:main && ELECTRON_START_URL=http://localhost:5173 electron .",
     "start": "npm run build:renderer && npm run build:main && electron .",
     "smoke": "npm run build:renderer && npm run build:main && SMOKE_TEST=1 electron .",
