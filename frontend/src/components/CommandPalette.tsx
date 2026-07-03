@@ -136,10 +136,12 @@ export function CommandPalette({
   }
 
   function onInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "Escape") {
       onOpenChange(false);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
+      if (flat.length === 0) return;
       setSelected((s) => Math.min(s + 1, flat.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
