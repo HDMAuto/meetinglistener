@@ -66,3 +66,35 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+export interface SearchMeetingHit {
+  id: string;
+  title: string;
+  status: MeetingStatus;
+  createdAt: string;
+  rank: number;
+}
+
+export interface SearchTranscriptHit {
+  meetingId: string;
+  meetingTitle: string;
+  snippet: string;
+  rank: number;
+}
+
+export interface SearchTaskHit {
+  id: string;
+  meetingId: string;
+  meetingTitle: string;
+  description: string;
+  status: TaskStatus;
+  assigneeName: string | null;
+  rank: number;
+}
+
+export interface SearchResults {
+  query: string;
+  meetings: SearchMeetingHit[];
+  transcripts: SearchTranscriptHit[];
+  tasks: SearchTaskHit[];
+}

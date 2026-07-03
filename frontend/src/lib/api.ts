@@ -2,6 +2,7 @@ import type {
   AuthResponse,
   Meeting,
   Notification,
+  SearchResults,
   Task,
   Transcript,
   User,
@@ -71,6 +72,10 @@ export const api = {
     form.append("audio", file, filename);
     return request<Meeting>(`/meetings/${id}/audio`, { method: "POST", body: form });
   },
+
+  // Search
+  search: (q: string) =>
+    request<SearchResults>(`/search?q=${encodeURIComponent(q)}`),
 
   // Tasks
   listTasks: (meetingId: string) => request<Task[]>(`/meetings/${meetingId}/tasks`),
