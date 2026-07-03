@@ -12,9 +12,11 @@ function loadEnvTest(): Record<string, string> {
 }
 
 // Create/reset the test database schema once before the whole test run.
+// Uses migrate reset (not db push) so hand-written migration SQL — like the
+// generated tsvector search columns — is applied exactly as in production.
 export default async function globalSetup() {
   const envTest = loadEnvTest();
-  execSync("npx prisma db push --force-reset --skip-generate", {
+  execSync("npx prisma migrate reset --force --skip-generate --skip-seed", {
     stdio: "inherit",
     env: { ...process.env, ...envTest },
   });
