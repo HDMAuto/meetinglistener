@@ -33,8 +33,10 @@ model Meeting {
   transcript   Transcript?
   tasks        Task[]
   createdAt    DateTime     @default(now())
+  searchVector Unsupported("tsvector")? @default(dbgenerated("((setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, COALESCE(goal, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(summary, ''::text)), 'C'::\"char\"))"))
 
   @@index([ownerId])
+  @@index([searchVector], type: Gin)
 }
 
 model Transcript {
@@ -44,6 +46,9 @@ model Transcript {
   fullText  String
   segments  Json?
   createdAt DateTime @default(now())
+  searchVector Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"fullText\", ''::text))"))
+
+  @@index([searchVector], type: Gin)
 }
 
 model Task {
@@ -58,9 +63,11 @@ model Task {
   status               String    @default("needs_assignee")
   notifiedAt           DateTime?
   createdAt            DateTime  @default(now())
+  searchVector         Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, ((COALESCE(description, ''::text) || ' '::text) || COALESCE(\"assigneeText\", ''::text)))"))
 
   @@index([meetingId])
   @@index([assigneeId])
+  @@index([searchVector], type: Gin)
 }
 
 model Notification {
