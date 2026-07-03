@@ -210,7 +210,7 @@ export function CommandPalette({
             </div>
           ) : results && !hasAny ? (
             <p className="px-3 py-8 text-center text-sm text-muted">
-              No matches for "{results.query}".
+              No matches for “{results.query}”.
             </p>
           ) : results ? (
             <>
