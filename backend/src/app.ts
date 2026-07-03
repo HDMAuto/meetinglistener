@@ -7,6 +7,7 @@ import { meetingRouter } from "./meetings/meeting.routes.js";
 import { audioRouter } from "./meetings/audio.routes.js";
 import { meetingTaskRouter, taskRouter } from "./tasks/task.routes.js";
 import { notificationRouter } from "./notifications/notification.routes.js";
+import { searchRouter } from "./search/search.routes.js";
 import { downloadRouter } from "./downloads/download.routes.js";
 
 // Native mobile (no Origin header) and the Electron desktop app (file:// →
@@ -37,6 +38,7 @@ export function createApp(): Express {
   app.use("/meetings", meetingTaskRouter);
   app.use("/tasks", taskRouter);
   app.use("/notifications", notificationRouter);
+  app.use("/search", searchRouter);
   app.use("/download", downloadRouter);
 
   return app;
