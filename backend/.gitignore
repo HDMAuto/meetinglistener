@@ -5,5 +5,5 @@ dist
 .env
 .env.test
 uploads
-uploads-testdownloads
-.superpowers/
+uploads-test
+downloads
