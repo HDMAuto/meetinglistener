@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { initials } from "../lib/format";
 import { cn } from "./ui";
+import { CommandPalette } from "./CommandPalette";
 
 function LogoMark() {
   return (
@@ -65,6 +66,8 @@ export function AppLayout() {
     refetchInterval: 15000,
   });
   const unread = notifications?.filter((n) => !n.read).length ?? 0;
+  const [searchOpen, setSearchOpen] = useState(false);
+  const isMac = navigator.platform.toUpperCase().includes("MAC");
 
   return (
     <div className="flex h-full">
@@ -73,7 +76,21 @@ export function AppLayout() {
           <LogoMark />
         </div>
 
-        <nav className="mt-8 flex flex-col gap-1">
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="mt-6 flex w-full cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-500"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+          </svg>
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
+            {isMac ? "⌘K" : "Ctrl K"}
+          </kbd>
+        </button>
+
+        <nav className="mt-4 flex flex-col gap-1">
           <NavItem
             to="/"
             end
@@ -123,6 +140,8 @@ export function AppLayout() {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+
+      <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 }
