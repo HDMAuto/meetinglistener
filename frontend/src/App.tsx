@@ -7,6 +7,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { MeetingDetail } from "./pages/MeetingDetail";
 import { Notifications } from "./pages/Notifications";
 import { UserManagement } from "./pages/UserManagement";
+import { MyTeams } from "./pages/MyTeams";
 
 // Electron loads the built app from file:// where history-based routing breaks;
 // use hash routing there and keep clean URLs on the web.
@@ -27,6 +28,7 @@ export default function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/teams" element={<MyTeams />} />
             <Route path="/meetings/:id" element={<MeetingDetail />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/admin/users" element={<UserManagement />} />
