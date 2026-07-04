@@ -11,7 +11,7 @@ meetingRouter.use(requireAuth);
 
 const createSchema = z.object({
   title: z.string().min(1),
-  teamId: z.string().optional(),
+  teamId: z.string().min(1).optional(),
 });
 
 meetingRouter.post("/", async (req, res) => {

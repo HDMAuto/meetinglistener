@@ -75,4 +75,13 @@ describe("meetings with teams", () => {
       .set("Authorization", `Bearer ${owner.token}`);
     expect(got.body.team).toBeNull();
   });
+
+  it("rejects an empty-string teamId with 400", async () => {
+    const res = await request(app)
+      .post("/meetings")
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({ title: "Empty", teamId: "" });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("INVALID_BODY");
+  });
 });
