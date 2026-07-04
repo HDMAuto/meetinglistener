@@ -10,7 +10,8 @@
     "migrate:deploy": "prisma migrate deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "make-admin": "node --env-file=.env --import tsx scripts/make-admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.109.0",
