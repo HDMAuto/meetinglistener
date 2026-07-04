@@ -8,8 +8,17 @@ export async function createTasksFromAnalysis(
   meetingId: string,
   analysis: Analysis,
 ): Promise<void> {
+  // Team attached → candidates are that team's active members only (hard
+  // boundary); no team → all active users, as before.
+  const meeting = await prisma.meeting.findUniqueOrThrow({
+    where: { id: meetingId },
+    select: { teamId: true },
+  });
   const users = await prisma.user.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(meeting.teamId ? { teams: { some: { id: meeting.teamId } } } : {}),
+    },
     select: { id: true, name: true },
   });
 
