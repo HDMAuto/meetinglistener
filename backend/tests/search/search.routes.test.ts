@@ -1,14 +1,12 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { createApp } from "../../src/app.js";
+import { createTestUser } from "../helpers/users.js";
 
 const app = createApp();
 
 async function registerAndToken(email: string): Promise<string> {
-  const res = await request(app)
-    .post("/auth/register")
-    .send({ name: "U", email, password: "hunter2" });
-  return res.body.token as string;
+  return (await createTestUser({ email })).token;
 }
 
 describe("search routes", () => {

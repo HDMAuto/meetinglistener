@@ -65,3 +65,21 @@ export async function findUserById(id: string): Promise<PublicUser | null> {
   const user = await prisma.user.findUnique({ where: { id } });
   return user ? toPublicUser(user) : null;
 }
+
+// Verifies the current password before setting the new one; clears the
+// first-login flag. Returns false when the user is unknown or the current
+// password doesn't match.
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return false;
+  if (!(await verifyPassword(currentPassword, user.passwordHash))) return false;
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash: await hashPassword(newPassword), mustChangePassword: false },
+  });
+  return true;
+}
