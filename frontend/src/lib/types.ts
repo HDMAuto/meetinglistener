@@ -40,7 +40,32 @@ export interface Meeting {
   goal: string | null;
   summary: string | null;
   errorMessage: string | null;
+  teamId: string | null;
   createdAt: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  createdAt: string;
+  members: TeamMember[];
+}
+
+// Shape embedded on GET /meetings/:id
+export interface MeetingTeam {
+  id: string;
+  name: string;
+  members: { id: string; name: string }[];
+}
+
+export interface MeetingWithTeam extends Meeting {
+  team: MeetingTeam | null;
 }
 
 export type TaskStatus = "needs_assignee" | "open" | "done";

@@ -2,9 +2,11 @@ import type {
   AuthResponse,
   ManagedUser,
   Meeting,
+  MeetingWithTeam,
   Notification,
   SearchResults,
   Task,
+  Team,
   Transcript,
   User,
 } from "./types";
@@ -77,9 +79,12 @@ export const api = {
 
   // Meetings
   listMeetings: () => request<Meeting[]>("/meetings"),
-  getMeeting: (id: string) => request<Meeting>(`/meetings/${id}`),
-  createMeeting: (title: string) =>
-    request<Meeting>("/meetings", { method: "POST", body: JSON.stringify({ title }) }),
+  getMeeting: (id: string) => request<MeetingWithTeam>(`/meetings/${id}`),
+  createMeeting: (title: string, teamId?: string) =>
+    request<Meeting>("/meetings", {
+      method: "POST",
+      body: JSON.stringify(teamId ? { title, teamId } : { title }),
+    }),
   getTranscript: (id: string) => request<Transcript>(`/meetings/${id}/transcript`),
   deleteMeeting: (id: string) => request<void>(`/meetings/${id}`, { method: "DELETE" }),
   uploadAudio: (id: string, file: Blob, filename: string) => {
@@ -87,6 +92,14 @@ export const api = {
     form.append("audio", file, filename);
     return request<Meeting>(`/meetings/${id}/audio`, { method: "POST", body: form });
   },
+
+  // Teams
+  listTeams: () => request<Team[]>("/teams"),
+  createTeam: (body: { name: string; memberIds: string[] }) =>
+    request<Team>("/teams", { method: "POST", body: JSON.stringify(body) }),
+  updateTeam: (id: string, body: { name?: string; memberIds?: string[] }) =>
+    request<Team>(`/teams/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  deleteTeam: (id: string) => request<void>(`/teams/${id}`, { method: "DELETE" }),
 
   // Search
   search: (q: string) =>
