@@ -224,22 +224,26 @@ function AddUserModal({
   const [tempPassword, setTempPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const close = () => {
+    setName("");
+    setEmail("");
+    setRole("member");
+    setTempPassword("");
+    setError(null);
+    onClose();
+  };
+
   const create = useMutation({
     mutationFn: () => api.createUser({ name, email, role, tempPassword }),
     onSuccess: () => {
       onDone();
-      onClose();
-      setName("");
-      setEmail("");
-      setRole("member");
-      setTempPassword("");
-      setError(null);
+      close();
     },
     onError: (err) => setError(errorMessage(err)),
   });
 
   return (
-    <Modal open={open} onClose={onClose} title="Add user">
+    <Modal open={open} onClose={close} title="Add user">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -257,7 +261,7 @@ function AddUserModal({
         <TempPasswordField value={tempPassword} onChange={setTempPassword} />
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={close}>
             Cancel
           </Button>
           <Button type="submit" loading={create.isPending}>
@@ -316,18 +320,23 @@ function EditUserModal({
     setLoadedFor(user.id);
   }
 
+  const close = () => {
+    setError(null);
+    setLoadedFor(null);
+    onClose();
+  };
+
   const update = useMutation({
     mutationFn: () => api.updateUser(user!.id, { name, email, role }),
     onSuccess: () => {
       onDone();
-      onClose();
-      setLoadedFor(null);
+      close();
     },
     onError: (err) => setError(errorMessage(err)),
   });
 
   return (
-    <Modal open={!!user} onClose={onClose} title="Edit user">
+    <Modal open={!!user} onClose={close} title="Edit user">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -344,7 +353,7 @@ function EditUserModal({
         <RoleSelect value={role} onChange={setRole} />
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={close}>
             Cancel
           </Button>
           <Button type="submit" loading={update.isPending}>
@@ -368,19 +377,23 @@ function ResetPasswordModal({
   const [tempPassword, setTempPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const close = () => {
+    setTempPassword("");
+    setError(null);
+    onClose();
+  };
+
   const reset = useMutation({
     mutationFn: () => api.resetUserPassword(user!.id, tempPassword),
     onSuccess: () => {
       onDone();
-      onClose();
-      setTempPassword("");
-      setError(null);
+      close();
     },
     onError: (err) => setError(errorMessage(err)),
   });
 
   return (
-    <Modal open={!!user} onClose={onClose} title={`Reset password — ${user?.name ?? ""}`}>
+    <Modal open={!!user} onClose={close} title={`Reset password — ${user?.name ?? ""}`}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -394,7 +407,7 @@ function ResetPasswordModal({
         <TempPasswordField value={tempPassword} onChange={setTempPassword} />
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={close}>
             Cancel
           </Button>
           <Button type="submit" loading={reset.isPending}>
@@ -418,13 +431,17 @@ function ToggleActiveModal({
   const [error, setError] = useState<string | null>(null);
   const deactivating = user?.isActive ?? false;
 
+  const close = () => {
+    setError(null);
+    onClose();
+  };
+
   const toggle = useMutation({
     mutationFn: () =>
       deactivating ? api.deactivateUser(user!.id) : api.reactivateUser(user!.id),
     onSuccess: () => {
       onDone();
-      onClose();
-      setError(null);
+      close();
     },
     onError: (err) => setError(errorMessage(err)),
   });
@@ -432,7 +449,7 @@ function ToggleActiveModal({
   return (
     <Modal
       open={!!user}
-      onClose={onClose}
+      onClose={close}
       title={deactivating ? "Deactivate user?" : "Reactivate user?"}
     >
       <p className="text-sm text-muted">
@@ -444,7 +461,7 @@ function ToggleActiveModal({
         <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
       )}
       <div className="mt-5 flex justify-end gap-2">
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" onClick={close}>
           Cancel
         </Button>
         <Button
