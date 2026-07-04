@@ -8,7 +8,10 @@ export async function createTasksFromAnalysis(
   meetingId: string,
   analysis: Analysis,
 ): Promise<void> {
-  const users = await prisma.user.findMany({ select: { id: true, name: true } });
+  const users = await prisma.user.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+  });
 
   for (const t of analysis.tasks) {
     const r = resolveAssignee(t.assignee, t.assigneeConfidence, users);

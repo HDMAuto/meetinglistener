@@ -3,18 +3,33 @@ import { prisma } from "../db/client.js";
 import { hashPassword, verifyPassword } from "../auth/password.js";
 
 export interface PublicUser {
-    id:             string;
-    name:           string;
-    email:          string;
-    createdAt:      Date;
+    id:                 string;
+    name:               string;
+    email:              string;
+    role:               string;
+    isActive:           boolean;
+    mustChangePassword: boolean;
+    createdAt:          Date;
 }
 
 export function toPublicUser(user: User): PublicUser {
-    return { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt};
+    return {
+        id:                 user.id,
+        name:               user.name,
+        email:              user.email,
+        role:               user.role,
+        isActive:           user.isActive,
+        mustChangePassword: user.mustChangePassword,
+        createdAt:          user.createdAt,
+    };
 }
 
+// Active users only — feeds assignee/team pickers.
 export async function listUsers(): Promise<PublicUser[]> {
-    const users = await prisma.user.findMany({ orderBy: { name: "asc" } });
+    const users = await prisma.user.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+    });
     return users.map(toPublicUser);
 }
 

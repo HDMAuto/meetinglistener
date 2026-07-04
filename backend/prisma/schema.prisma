@@ -13,6 +13,9 @@ model User {
   email         String         @unique
   passwordHash  String
   pushToken     String?
+  role               String   @default("member")
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(false)
   createdAt     DateTime       @default(now())
   meetings      Meeting[]
   assignedTasks Task[]         @relation("TaskAssignee")
