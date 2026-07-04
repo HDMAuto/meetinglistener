@@ -16,6 +16,8 @@ model User {
   role               String   @default("member")
   isActive           Boolean  @default(true)
   mustChangePassword Boolean  @default(false)
+  ownedTeams    Team[]         @relation("TeamOwner")
+  teams         Team[]         @relation("TeamMembers")
   createdAt     DateTime       @default(now())
   meetings      Meeting[]
   assignedTasks Task[]         @relation("TaskAssignee")
@@ -36,10 +38,25 @@ model Meeting {
   transcript   Transcript?
   tasks        Task[]
   createdAt    DateTime     @default(now())
+  teamId       String?
+  team         Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
   searchVector Unsupported("tsvector")? @default(dbgenerated("((setweight(to_tsvector('english'::regconfig, COALESCE(title, ''::text)), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, COALESCE(goal, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(summary, ''::text)), 'C'::\"char\"))"))
 
   @@index([ownerId])
+  @@index([teamId])
   @@index([searchVector], type: Gin)
+}
+
+model Team {
+  id        String    @id @default(cuid())
+  ownerId   String
+  owner     User      @relation("TeamOwner", fields: [ownerId], references: [id])
+  name      String
+  members   User[]    @relation("TeamMembers")
+  meetings  Meeting[]
+  createdAt DateTime  @default(now())
+
+  @@index([ownerId])
 }
 
 model Transcript {
