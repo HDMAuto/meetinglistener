@@ -873,7 +873,7 @@ export async function adminResetPassword(
 }
 ```
 
-(The old `createUser` function is now unused — delete it in the same edit.)
+> **Amendment (found during execution):** `createUser` is NOT unused — 7 test files (misc, tasks×2, meetings×3, pipeline) build fixtures with it directly. It stays in `user.service.ts` alongside `adminCreateUser`, and `user.service.test.ts` keeps its original 4 `createUser` tests as a first describe block in addition to the `adminCreateUser` block below. Expected totals shift +4 (Task 4 ends at 79, final ≈81).
 
 - [ ] **Step 4: Implement the routes**
 
