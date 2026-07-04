@@ -3,6 +3,7 @@ import express from "express";
 import request from "supertest";
 import { requireAuth } from "../../src/auth/middleware.js";
 import { signToken } from "../../src/auth/jwt.js";
+import { createTestUser } from "../helpers/users.js";
 
 function appWithProtectedRoute() {
   const app = express();
@@ -24,11 +25,11 @@ describe("requireAuth", () => {
   });
 
   it("passes through with a valid token and sets userId", async () => {
-    const token = signToken({ userId: "user_abc" });
+    const user = await createTestUser({ email: "auth-middleware@test.local" });
     const res = await request(appWithProtectedRoute())
       .get("/me")
-      .set("Authorization", `Bearer ${token}`);
+      .set("Authorization", `Bearer ${user.token}`);
     expect(res.status).toBe(200);
-    expect(res.body.userId).toBe("user_abc");
+    expect(res.body.userId).toBe(user.id);
   });
 });
