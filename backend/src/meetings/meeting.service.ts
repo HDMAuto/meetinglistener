@@ -5,9 +5,10 @@ import { deleteAudio } from "../storage/audioStorage.js";
 export async function createMeeting(input: {
   ownerId: string;
   title: string;
+  teamId?: string;
 }): Promise<Meeting> {
   return prisma.meeting.create({
-    data: { ownerId: input.ownerId, title: input.title },
+    data: { ownerId: input.ownerId, title: input.title, teamId: input.teamId ?? null },
   });
 }
 
