@@ -51,6 +51,82 @@ export async function createUser(input: {
     return toPublicUser(user);
 }
 
+export async function listAllUsers(): Promise<PublicUser[]> {
+  const users = await prisma.user.findMany({ orderBy: { name: "asc" } });
+  return users.map(toPublicUser);
+}
+
+// Throws LAST_ADMIN if no OTHER active admin exists besides targetId.
+async function assertNotLastActiveAdmin(targetId: string): Promise<void> {
+  const others = await prisma.user.count({
+    where: { role: "admin", isActive: true, NOT: { id: targetId } },
+  });
+  if (others === 0) throw new Error("LAST_ADMIN");
+}
+
+export async function adminCreateUser(input: {
+  name: string;
+  email: string;
+  role: "admin" | "member";
+  tempPassword: string;
+}): Promise<PublicUser> {
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) throw new Error("EMAIL_TAKEN");
+  const user = await prisma.user.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      role: input.role,
+      passwordHash: await hashPassword(input.tempPassword),
+      mustChangePassword: true,
+    },
+  });
+  return toPublicUser(user);
+}
+
+// null = not found. Throws EMAIL_TAKEN / LAST_ADMIN.
+export async function adminUpdateUser(
+  id: string,
+  patch: { name?: string; email?: string; role?: "admin" | "member" },
+): Promise<PublicUser | null> {
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return null;
+  if (patch.email && patch.email !== target.email) {
+    const existing = await prisma.user.findUnique({ where: { email: patch.email } });
+    if (existing) throw new Error("EMAIL_TAKEN");
+  }
+  if (patch.role === "member" && target.role === "admin" && target.isActive) {
+    await assertNotLastActiveAdmin(id);
+  }
+  const user = await prisma.user.update({ where: { id }, data: patch });
+  return toPublicUser(user);
+}
+
+// null = not found. Throws LAST_ADMIN when deactivating the last active admin.
+export async function setUserActive(id: string, active: boolean): Promise<PublicUser | null> {
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return null;
+  if (!active && target.role === "admin" && target.isActive) {
+    await assertNotLastActiveAdmin(id);
+  }
+  const user = await prisma.user.update({ where: { id }, data: { isActive: active } });
+  return toPublicUser(user);
+}
+
+// null = not found.
+export async function adminResetPassword(
+  id: string,
+  tempPassword: string,
+): Promise<PublicUser | null> {
+  const target = await prisma.user.findUnique({ where: { id } });
+  if (!target) return null;
+  const user = await prisma.user.update({
+    where: { id },
+    data: { passwordHash: await hashPassword(tempPassword), mustChangePassword: true },
+  });
+  return toPublicUser(user);
+}
+
 export async function verifyCredentials(
   email: string,
   password: string,
