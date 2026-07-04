@@ -4,9 +4,7 @@ import { Button, Field, Input } from "../components/ui";
 import { ApiError } from "../lib/api";
 
 export function Login() {
-  const { login, register } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [name, setName] = useState("");
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -17,13 +15,12 @@ export function Login() {
     setError(null);
     setLoading(true);
     try {
-      if (mode === "login") await login(email, password);
-      else await register(name, email, password);
+      await login(email, password);
     } catch (err) {
       if (err instanceof ApiError) {
-        if (err.code === "EMAIL_TAKEN") setError("That email is already registered.");
-        else if (err.code === "INVALID_CREDENTIALS") setError("Wrong email or password.");
-        else if (err.code === "INVALID_BODY") setError("Password must be at least 6 characters.");
+        if (err.code === "INVALID_CREDENTIALS") setError("Wrong email or password.");
+        else if (err.code === "ACCOUNT_DISABLED")
+          setError("Your account has been deactivated. Contact your administrator.");
         else setError(err.message);
       } else {
         setError("Could not reach the server. Is the backend running?");
@@ -67,26 +64,10 @@ export function Login() {
       {/* Form panel */}
       <div className="flex w-full items-center justify-center px-6 lg:w-1/2">
         <div className="w-full max-w-sm animate-fade-up">
-          <h2 className="text-2xl font-bold tracking-tight text-ink">
-            {mode === "login" ? "Welcome back" : "Create your account"}
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            {mode === "login" ? "Sign in to your dashboard." : "Start turning meetings into action."}
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight text-ink">Welcome back</h2>
+          <p className="mt-1 text-sm text-muted">Sign in to your dashboard.</p>
 
           <form onSubmit={onSubmit} className="mt-8 space-y-4">
-            {mode === "register" && (
-              <Field label="Name" htmlFor="name">
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ada Lovelace"
-                  required
-                  autoComplete="name"
-                />
-              </Field>
-            )}
             <Field label="Email" htmlFor="email">
               <Input
                 id="email"
@@ -106,7 +87,7 @@ export function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                autoComplete="current-password"
               />
             </Field>
 
@@ -117,22 +98,9 @@ export function Login() {
             )}
 
             <Button type="submit" loading={loading} className="w-full">
-              {mode === "login" ? "Sign in" : "Create account"}
+              Sign in
             </Button>
           </form>
-
-          <p className="mt-6 text-center text-sm text-muted">
-            {mode === "login" ? "New here?" : "Already have an account?"}{" "}
-            <button
-              onClick={() => {
-                setMode(mode === "login" ? "register" : "login");
-                setError(null);
-              }}
-              className="cursor-pointer font-semibold text-brand-600 hover:text-brand-700"
-            >
-              {mode === "login" ? "Create an account" : "Sign in"}
-            </button>
-          </p>
         </div>
       </div>
     </div>

@@ -1,7 +1,24 @@
+export type Role = "admin" | "member";
+
 export interface User {
   id: string;
   name: string;
   email: string;
+  createdAt: string;
+  // Optional: absent in user objects persisted to localStorage before this release.
+  role?: Role;
+  isActive?: boolean;
+  mustChangePassword?: boolean;
+}
+
+// Full row for the admin User Management table (GET /users/all).
+export interface ManagedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
+  mustChangePassword: boolean;
   createdAt: string;
 }
 

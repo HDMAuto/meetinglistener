@@ -1,5 +1,6 @@
 import type {
   AuthResponse,
+  ManagedUser,
   Meeting,
   Notification,
   SearchResults,
@@ -52,13 +53,27 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
 
 export const api = {
   // Auth
-  register: (body: { name: string; email: string; password: string }) =>
-    request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify(body) }),
   login: (body: { email: string; password: string }) =>
     request<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+  changePassword: (body: { currentPassword: string; newPassword: string }) =>
+    request<void>("/auth/change-password", { method: "POST", body: JSON.stringify(body) }),
 
   // Users
   listUsers: () => request<User[]>("/users"),
+  listAllUsers: () => request<ManagedUser[]>("/users/all"),
+  createUser: (body: { name: string; email: string; role: "admin" | "member"; tempPassword: string }) =>
+    request<ManagedUser>("/users", { method: "POST", body: JSON.stringify(body) }),
+  updateUser: (id: string, body: { name?: string; email?: string; role?: "admin" | "member" }) =>
+    request<ManagedUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
+  deactivateUser: (id: string) =>
+    request<ManagedUser>(`/users/${id}/deactivate`, { method: "POST" }),
+  reactivateUser: (id: string) =>
+    request<ManagedUser>(`/users/${id}/reactivate`, { method: "POST" }),
+  resetUserPassword: (id: string, tempPassword: string) =>
+    request<ManagedUser>(`/users/${id}/reset-password`, {
+      method: "POST",
+      body: JSON.stringify({ tempPassword }),
+    }),
 
   // Meetings
   listMeetings: () => request<Meeting[]>("/meetings"),

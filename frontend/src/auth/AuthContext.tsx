@@ -7,8 +7,8 @@ const USER_KEY = "ml_user";
 interface AuthState {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateStoredUser: (patch: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -32,19 +32,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(res.user, res.token);
   };
 
-  const register: AuthState["register"] = async (name, email, password) => {
-    const res = await api.register({ name, email, password });
-    persist(res.user, res.token);
-  };
-
   const logout = () => {
     setToken(null);
     localStorage.removeItem(USER_KEY);
     setUser(null);
   };
 
+  // Patch the in-memory + persisted user (e.g. clearing mustChangePassword
+  // after a successful forced change) without a fresh login round-trip.
+  const updateStoredUser: AuthState["updateStoredUser"] = (patch) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      localStorage.setItem(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateStoredUser }}>
       {children}
     </AuthContext.Provider>
   );
