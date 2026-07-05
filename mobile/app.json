@@ -1,31 +1,31 @@
 {
-  "expo": {
-    "name": "Briefly",
-    "slug": "meetinglistener",
-    "version": "0.2.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "app.meetinglistener.mobile"
-    },
-    "android": {
-      "package": "app.meetinglistener.mobile",
-      "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/icon.png"
-      },
-      "predictiveBackGestureEnabled": false
-    },
-    "plugins": [
-      [
-        "expo-audio",
-        {
-          "microphonePermission": "Briefly records meeting audio so it can transcribe and summarize your meetings."
-        }
-      ],
-      "expo-font"
-    ]
-  }
+ "expo": {
+  "name": "Briefly",
+  "slug": "meetinglistener",
+  "version": "0.3.0",
+  "orientation": "portrait",
+  "icon": "./assets/icon.png",
+  "userInterfaceStyle": "light",
+  "ios": {
+   "supportsTablet": true,
+   "bundleIdentifier": "app.meetinglistener.mobile"
+  },
+  "android": {
+   "package": "app.meetinglistener.mobile",
+   "adaptiveIcon": {
+    "backgroundColor": "#FFFFFF",
+    "foregroundImage": "./assets/icon.png"
+   },
+   "predictiveBackGestureEnabled": false
+  },
+  "plugins": [
+   [
+    "expo-audio",
+    {
+     "microphonePermission": "Briefly records meeting audio so it can transcribe and summarize your meetings."
+    }
+   ],
+   "expo-font"
+  ]
+ }
 }
