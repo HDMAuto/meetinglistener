@@ -33,21 +33,33 @@ export function Login() {
   return (
     <div className="flex h-full">
       {/* Brand panel */}
-      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-brand-700 p-12 text-white lg:flex">
+      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-brand-900 p-12 text-white lg:flex">
         <div
           className="pointer-events-none absolute inset-0 opacity-30"
           style={{
             background:
-              "radial-gradient(60rem 60rem at 20% 10%, rgba(20,184,166,0.6), transparent), radial-gradient(40rem 40rem at 90% 90%, rgba(249,115,22,0.35), transparent)",
+              "radial-gradient(60rem 60rem at 20% 10%, rgba(56,189,248,0.5), transparent), radial-gradient(40rem 40rem at 90% 90%, rgba(37,99,235,0.45), transparent)",
           }}
         />
         <div className="relative flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 3v18M8 7v10M16 7v10M4 10v4M20 10v4" strokeLinecap="round" />
+            <svg className="h-6 w-6" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="briefly-g-login" x1="0" y1="1" x2="1" y2="0">
+                  <stop offset="0" stopColor="#1D4ED8" />
+                  <stop offset="0.55" stopColor="#2563EB" />
+                  <stop offset="1" stopColor="#38BDF8" />
+                </linearGradient>
+              </defs>
+              <path fill="url(#briefly-g-login)" d="M116 84 H312 L428 200 V336 a48 48 0 0 1 -48 48 H236 L156 462 V384 h-40 a48 48 0 0 1 -48 -48 V132 a48 48 0 0 1 48 -48 Z" />
+              <path fill="#93C5FD" d="M312 84 L428 200 H344 a32 32 0 0 1 -32 -32 Z" />
+              <rect x="152" y="196" width="168" height="24" rx="12" fill="#EFF6FF" />
+              <rect x="152" y="244" width="208" height="24" rx="12" fill="#DBEAFE" />
+              <rect x="152" y="292" width="128" height="24" rx="12" fill="#BFDBFE" />
+              <path fill="#7DD3FC" d="M448 34 l16 40 40 16 -40 16 -16 40 -16 -40 -40 -16 40 -16 Z" />
             </svg>
           </div>
-          <span className="text-lg font-extrabold tracking-tight">MeetingListener</span>
+          <span className="text-lg font-extrabold tracking-tight">Briefly</span>
         </div>
         <div className="relative">
           <h1 className="max-w-md text-4xl font-extrabold leading-tight tracking-tight">
