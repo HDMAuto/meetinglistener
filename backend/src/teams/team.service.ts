@@ -26,7 +26,7 @@ const activeMembers = {
 export async function listTeams(ownerId: string): Promise<TeamWithMembers[]> {
   const teams = await prisma.team.findMany({
     where: { ownerId },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     include: { members: activeMembers },
   });
   return teams.map(({ id, name, createdAt, members }) => ({ id, name, createdAt, members }));

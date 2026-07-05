@@ -15,7 +15,9 @@ export async function createMeeting(input: {
 export async function listMeetings(ownerId: string): Promise<Meeting[]> {
   return prisma.meeting.findMany({
     where: { ownerId },
-    orderBy: { createdAt: "desc" },
+    // id as tiebreaker: two meetings created in the same millisecond would
+    // otherwise sort nondeterministically (cuids are monotonic within a ms).
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   });
 }
 
