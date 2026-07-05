@@ -47,7 +47,7 @@ Single-source change in `frontend/tailwind.config.*` tokens; components consume 
 
 - **Master mark**: new `docs/brand/briefly-mark.svg` — vector recreation: rounded speech bubble with folded top-right document corner, three text lines, four-point sparkle at the upper right; light-blue→blue gradient; transparent background.
 - Derived (same mark, sized/adapted): `frontend/public/favicon.svg`; `desktop/build/icon.*` (whatever format the current build consumes — swap in place, same filenames); inline SVG in `LogoMark`; `mobile/assets/icon.png` rendered on a navy rounded-square with safe-area padding.
-- **Marketing render**: `logo.png` moves to `docs/brand/briefly-hero.png` and is copied into the download page's assets to serve as its hero image on a dark section.
+- **Marketing render**: `logo.png` moves to `docs/brand/briefly-hero.png` as the canonical brand reference. The download page's dark hero is **recreated in CSS** (navy band + blue radial glows + inline vector mark) rather than serving the PNG — the compiled backend (`dist/`) has no asset-copy step, so shipping a binary through it would be brittle; the CSS hero reads identically. *(Amended during planning.)*
 
 ## Verification
 
