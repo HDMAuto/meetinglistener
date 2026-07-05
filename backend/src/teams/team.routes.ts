@@ -2,21 +2,22 @@ import { Router } from "express";
 import { z } from "zod";
 import { requireAuth } from "../auth/middleware.js";
 import { listTeams, createTeam, updateTeam, deleteTeam } from "./team.service.js";
+import { asyncHandler } from "../http/asyncHandler.js";
 
 export const teamRouter = Router();
 
 teamRouter.use(requireAuth);
 
-teamRouter.get("/", async (req, res) => {
+teamRouter.get("/", asyncHandler(async (req, res) => {
   return res.json(await listTeams(req.userId!));
-});
+}));
 
 const createSchema = z.object({
   name: z.string().min(1),
   memberIds: z.array(z.string()),
 });
 
-teamRouter.post("/", async (req, res) => {
+teamRouter.post("/", asyncHandler(async (req, res) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "INVALID_BODY" });
   try {
@@ -28,7 +29,7 @@ teamRouter.post("/", async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
 const patchSchema = z
   .object({
@@ -37,7 +38,7 @@ const patchSchema = z
   })
   .refine((p) => Object.keys(p).length > 0);
 
-teamRouter.patch("/:id", async (req, res) => {
+teamRouter.patch("/:id", asyncHandler(async (req, res) => {
   const parsed = patchSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "INVALID_BODY" });
   try {
@@ -50,10 +51,10 @@ teamRouter.patch("/:id", async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
-teamRouter.delete("/:id", async (req, res) => {
+teamRouter.delete("/:id", asyncHandler(async (req, res) => {
   const deleted = await deleteTeam(req.params.id, req.userId!);
   if (!deleted) return res.status(404).json({ error: "NOT_FOUND" });
   return res.status(204).end();
-});
+}));

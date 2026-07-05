@@ -3,6 +3,7 @@ import { z } from "zod";
 import { verifyCredentials, changePassword } from "./user.service.js";
 import { signToken } from "../auth/jwt.js";
 import { requireAuth } from "../auth/middleware.js";
+import { asyncHandler } from "../http/asyncHandler.js";
 
 export const authRouter = Router();
 
@@ -11,7 +12,7 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", asyncHandler(async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "INVALID_BODY" });
@@ -25,14 +26,14 @@ authRouter.post("/login", async (req, res) => {
   }
   const token = signToken({ userId: user.id });
   return res.status(200).json({ token, user });
-});
+}));
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(6),
 });
 
-authRouter.post("/change-password", requireAuth, async (req, res) => {
+authRouter.post("/change-password", requireAuth, asyncHandler(async (req, res) => {
   const parsed = changePasswordSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "INVALID_BODY" });
@@ -46,4 +47,4 @@ authRouter.post("/change-password", requireAuth, async (req, res) => {
     return res.status(401).json({ error: "INVALID_CREDENTIALS" });
   }
   return res.status(204).end();
-});
+}));

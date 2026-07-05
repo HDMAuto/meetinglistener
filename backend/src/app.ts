@@ -10,6 +10,7 @@ import { notificationRouter } from "./notifications/notification.routes.js";
 import { searchRouter } from "./search/search.routes.js";
 import { teamRouter } from "./teams/team.routes.js";
 import { downloadRouter } from "./downloads/download.routes.js";
+import { errorHandler } from "./http/errorHandler.js";
 
 // Native mobile (no Origin header) and the Electron desktop app (file:// →
 // Origin "null") must always be allowed. Browsers are restricted to the
@@ -42,6 +43,8 @@ export function createApp(): Express {
   app.use("/search", searchRouter);
   app.use("/teams", teamRouter);
   app.use("/download", downloadRouter);
+
+  app.use(errorHandler);
 
   return app;
 }

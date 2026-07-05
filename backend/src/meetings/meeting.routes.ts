@@ -4,6 +4,7 @@ import { requireAuth } from "../auth/middleware.js";
 import { prisma } from "../db/client.js";
 import { createMeeting, listMeetings, getMeeting, deleteMeeting } from "./meeting.service.js";
 import { getOwnedTeam } from "../teams/team.service.js";
+import { asyncHandler } from "../http/asyncHandler.js";
 
 export const meetingRouter = Router();
 
@@ -14,7 +15,7 @@ const createSchema = z.object({
   teamId: z.string().min(1).optional(),
 });
 
-meetingRouter.post("/", async (req, res) => {
+meetingRouter.post("/", asyncHandler(async (req, res) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "INVALID_BODY" });
@@ -29,14 +30,14 @@ meetingRouter.post("/", async (req, res) => {
     teamId: parsed.data.teamId,
   });
   return res.status(201).json(meeting);
-});
+}));
 
-meetingRouter.get("/", async (req, res) => {
+meetingRouter.get("/", asyncHandler(async (req, res) => {
   const meetings = await listMeetings(req.userId!);
   return res.json(meetings);
-});
+}));
 
-meetingRouter.get("/:id", async (req, res) => {
+meetingRouter.get("/:id", asyncHandler(async (req, res) => {
   const meeting = await getMeeting(req.params.id, req.userId!);
   if (!meeting) return res.status(404).json({ error: "NOT_FOUND" });
   const team = meeting.teamId
@@ -54,18 +55,18 @@ meetingRouter.get("/:id", async (req, res) => {
       })
     : null;
   return res.json({ ...meeting, team });
-});
+}));
 
-meetingRouter.get("/:id/transcript", async (req, res) => {
+meetingRouter.get("/:id/transcript", asyncHandler(async (req, res) => {
   const meeting = await getMeeting(req.params.id, req.userId!);
   if (!meeting) return res.status(404).json({ error: "NOT_FOUND" });
   const transcript = await prisma.transcript.findUnique({ where: { meetingId: meeting.id } });
   if (!transcript) return res.status(404).json({ error: "NO_TRANSCRIPT" });
   return res.json(transcript);
-});
+}));
 
-meetingRouter.delete("/:id", async (req, res) => {
+meetingRouter.delete("/:id", asyncHandler(async (req, res) => {
   const deleted = await deleteMeeting(req.params.id, req.userId!);
   if (!deleted) return res.status(404).json({ error: "NOT_FOUND" });
   return res.status(204).end();
-});
+}));

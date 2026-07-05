@@ -5,11 +5,12 @@ import { getMeeting } from "./meeting.service.js";
 import { saveAudio } from "../storage/audioStorage.js";
 import { prisma } from "../db/client.js";
 import { processMeeting } from "../pipeline/processMeeting.js";
+import { asyncHandler } from "../http/asyncHandler.js";
 
 export const audioRouter = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-audioRouter.post("/:id/audio", requireAuth, upload.single("audio"), async (req, res) => {
+audioRouter.post("/:id/audio", requireAuth, upload.single("audio"), asyncHandler(async (req, res) => {
   const meeting = await getMeeting(req.params.id, req.userId!);
   if (!meeting) return res.status(404).json({ error: "NOT_FOUND" });
   if (!req.file) return res.status(400).json({ error: "NO_FILE" });
@@ -24,4 +25,4 @@ audioRouter.post("/:id/audio", requireAuth, upload.single("audio"), async (req, 
   void processMeeting(meeting.id);
 
   return res.status(202).json(updated);
-});
+}));

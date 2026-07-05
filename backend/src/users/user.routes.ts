@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireAuth, requireAdmin } from "../auth/middleware.js";
+import { asyncHandler } from "../http/asyncHandler.js";
 import {
   listUsers,
   listAllUsers,
@@ -15,16 +16,16 @@ export const userRouter = Router();
 userRouter.use(requireAuth);
 
 // GET /users — active users only (assignee/team pickers). Any authed user.
-userRouter.get("/", async (_req, res) => {
+userRouter.get("/", asyncHandler(async (_req, res) => {
   return res.json(await listUsers());
-});
+}));
 
 // Everything below is admin-only.
 userRouter.use(requireAdmin);
 
-userRouter.get("/all", async (_req, res) => {
+userRouter.get("/all", asyncHandler(async (_req, res) => {
   return res.json(await listAllUsers());
-});
+}));
 
 const roleEnum = z.enum(["admin", "member"]);
 
@@ -35,7 +36,7 @@ const createSchema = z.object({
   tempPassword: z.string().min(6),
 });
 
-userRouter.post("/", async (req, res) => {
+userRouter.post("/", asyncHandler(async (req, res) => {
   const parsed = createSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "INVALID_BODY" });
   try {
@@ -47,7 +48,7 @@ userRouter.post("/", async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
 const patchSchema = z
   .object({
@@ -57,7 +58,7 @@ const patchSchema = z
   })
   .refine((p) => Object.keys(p).length > 0);
 
-userRouter.patch("/:id", async (req, res) => {
+userRouter.patch("/:id", asyncHandler(async (req, res) => {
   const parsed = patchSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "INVALID_BODY" });
   try {
@@ -70,9 +71,9 @@ userRouter.patch("/:id", async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
-userRouter.post("/:id/deactivate", async (req, res) => {
+userRouter.post("/:id/deactivate", asyncHandler(async (req, res) => {
   try {
     const user = await setUserActive(req.params.id, false);
     if (!user) return res.status(404).json({ error: "NOT_FOUND" });
@@ -83,20 +84,20 @@ userRouter.post("/:id/deactivate", async (req, res) => {
     }
     throw err;
   }
-});
+}));
 
-userRouter.post("/:id/reactivate", async (req, res) => {
+userRouter.post("/:id/reactivate", asyncHandler(async (req, res) => {
   const user = await setUserActive(req.params.id, true);
   if (!user) return res.status(404).json({ error: "NOT_FOUND" });
   return res.json(user);
-});
+}));
 
 const resetSchema = z.object({ tempPassword: z.string().min(6) });
 
-userRouter.post("/:id/reset-password", async (req, res) => {
+userRouter.post("/:id/reset-password", asyncHandler(async (req, res) => {
   const parsed = resetSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "INVALID_BODY" });
   const user = await adminResetPassword(req.params.id, parsed.data.tempPassword);
   if (!user) return res.status(404).json({ error: "NOT_FOUND" });
   return res.json(user);
-});
+}));
