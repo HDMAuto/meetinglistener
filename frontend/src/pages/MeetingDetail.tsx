@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { Meeting, Task, User } from "../lib/types";
+import type { MeetingWithTeam, Task, User } from "../lib/types";
 import { STATUS_LABEL, formatDateTime, formatDuration, initials, isProcessing } from "../lib/format";
 import { MeetingStatusBadge, TaskStatusBadge } from "../components/StatusBadge";
 import { Button, Card, Modal, Spinner, cn } from "../components/ui";
@@ -67,6 +67,15 @@ export function MeetingDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {meeting.team && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" strokeLinecap="round" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+              {meeting.team.name}
+            </span>
+          )}
           <MeetingStatusBadge status={meeting.status} />
           <button
             onClick={() => setConfirmOpen(true)}
@@ -120,7 +129,7 @@ export function MeetingDetail() {
   );
 }
 
-function ProcessingState({ meeting }: { meeting: Meeting }) {
+function ProcessingState({ meeting }: { meeting: MeetingWithTeam }) {
   const steps = ["uploaded", "transcribing", "summarizing", "ready"] as const;
   const currentIdx = steps.indexOf(meeting.status as (typeof steps)[number]);
   return (
@@ -166,7 +175,7 @@ function ProcessingState({ meeting }: { meeting: Meeting }) {
   );
 }
 
-function FailedState({ meeting }: { meeting: Meeting }) {
+function FailedState({ meeting }: { meeting: MeetingWithTeam }) {
   return (
     <Card className="mt-8 border-red-200 p-8">
       <h2 className="flex items-center gap-2 font-semibold text-red-700">
@@ -183,7 +192,7 @@ function FailedState({ meeting }: { meeting: Meeting }) {
   );
 }
 
-function ReadyState({ meeting }: { meeting: Meeting }) {
+function ReadyState({ meeting }: { meeting: MeetingWithTeam }) {
   const { data: tasks } = useQuery({
     queryKey: ["tasks", meeting.id],
     queryFn: () => api.listTasks(meeting.id),
@@ -195,6 +204,7 @@ function ReadyState({ meeting }: { meeting: Meeting }) {
   const { data: users } = useQuery({ queryKey: ["users"], queryFn: api.listUsers });
 
   const needsReview = tasks?.filter((t) => t.status === "needs_assignee").length ?? 0;
+  const teamMemberIds = new Set(meeting.team?.members.map((m) => m.id) ?? []);
 
   return (
     <div className="mt-8 space-y-6">
@@ -241,7 +251,13 @@ function ReadyState({ meeting }: { meeting: Meeting }) {
             <p className="text-sm text-muted">No action items were detected in this meeting.</p>
           ) : (
             tasks.map((t) => (
-              <TaskRow key={t.id} task={t} users={users ?? []} meetingId={meeting.id} />
+              <TaskRow
+                key={t.id}
+                task={t}
+                users={users ?? []}
+                meetingId={meeting.id}
+                teamMemberIds={teamMemberIds}
+              />
             ))
           )}
         </div>
@@ -269,7 +285,17 @@ function ReadyState({ meeting }: { meeting: Meeting }) {
   );
 }
 
-function TaskRow({ task, users, meetingId }: { task: Task; users: User[]; meetingId: string }) {
+function TaskRow({
+  task,
+  users,
+  meetingId,
+  teamMemberIds,
+}: {
+  task: Task;
+  users: User[];
+  meetingId: string;
+  teamMemberIds: Set<string>;
+}) {
   const qc = useQueryClient();
   const [picked, setPicked] = useState("");
 
@@ -288,6 +314,9 @@ function TaskRow({ task, users, meetingId }: { task: Task; users: User[]; meetin
   });
 
   const assignee = users.find((u) => u.id === task.assigneeId);
+  const hasTeam = teamMemberIds.size > 0;
+  const teamUsers = users.filter((u) => teamMemberIds.has(u.id));
+  const nonTeamUsers = users.filter((u) => !teamMemberIds.has(u.id));
   const suggestions = task.suggestedAssigneeIds
     .map((sid) => users.find((u) => u.id === sid))
     .filter((u): u is User => !!u);
@@ -327,22 +356,45 @@ function TaskRow({ task, users, meetingId }: { task: Task; users: User[]; meetin
               className="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             >
               <option value="">Select a person…</option>
-              {suggestions.length > 0 && (
-                <optgroup label="Suggested">
-                  {suggestions.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name}
-                    </option>
-                  ))}
-                </optgroup>
+              {hasTeam ? (
+                <>
+                  <optgroup label="Team">
+                    {teamUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {nonTeamUsers.length > 0 && (
+                    <optgroup label="Others">
+                      {nonTeamUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </>
+              ) : (
+                <>
+                  {suggestions.length > 0 && (
+                    <optgroup label="Suggested">
+                      {suggestions.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  <optgroup label={suggestions.length ? "Everyone else" : "People"}>
+                    {others.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
               )}
-              <optgroup label={suggestions.length ? "Everyone else" : "People"}>
-                {others.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </optgroup>
             </select>
             <Button
               onClick={() => picked && assign.mutate(picked)}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api, ApiError } from "../lib/api";
 import { Button, Field, Input, Modal, cn } from "./ui";
 
@@ -17,6 +18,7 @@ export function NewMeetingModal({
   onCreated: (meetingId: string) => void;
 }) {
   const [title, setTitle] = useState("");
+  const [teamId, setTeamId] = useState("");
   const [source, setSource] = useState<Source>({ kind: "none" });
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -26,6 +28,8 @@ export function NewMeetingModal({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
+
+  const { data: teams } = useQuery({ queryKey: ["teams"], queryFn: api.listTeams, enabled: open });
 
   useEffect(() => {
     if (!open) reset();
@@ -38,6 +42,7 @@ export function NewMeetingModal({
     recorderRef.current = null;
     chunksRef.current = [];
     setTitle("");
+    setTeamId("");
     setSource({ kind: "none" });
     setRecording(false);
     setElapsed(0);
@@ -90,7 +95,7 @@ export function NewMeetingModal({
     setSubmitting(true);
     setError(null);
     try {
-      const meeting = await api.createMeeting(title.trim());
+      const meeting = await api.createMeeting(title.trim(), teamId || undefined);
       if (source.kind === "recorded") {
         await api.uploadAudio(meeting.id, source.blob, "recording.webm");
       } else if (source.kind === "file") {
@@ -116,6 +121,22 @@ export function NewMeetingModal({
             placeholder="e.g. Q3 Sprint Planning"
             autoFocus
           />
+        </Field>
+
+        <Field label="Team (optional)" htmlFor="mteam">
+          <select
+            id="mteam"
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
+            className="w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-ink focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          >
+            <option value="">No team — anyone can be assigned</option>
+            {(teams ?? []).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.members.length} member{t.members.length === 1 ? "" : "s"})
+              </option>
+            ))}
+          </select>
         </Field>
 
         <div>
