@@ -1,11 +1,11 @@
-// MeetingListener design tokens (matches the web dashboard)
+// Briefly design tokens (matches the web dashboard)
 export const colors = {
-  brand50: "#F0FDFA",
-  brand100: "#CCFBF1",
-  brand500: "#14B8A6",
-  brand600: "#0D9488",
-  brand700: "#0F766E",
-  brand900: "#134E4A",
+  brand50: "#EFF6FF",
+  brand100: "#DBEAFE",
+  brand500: "#3B82F6",
+  brand600: "#2563EB",
+  brand700: "#1D4ED8",
+  brand900: "#1E3A8A",
   accent500: "#F97316",
   accent600: "#EA580C",
   ink: "#0F172A",

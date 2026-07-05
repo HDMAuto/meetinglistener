@@ -57,9 +57,7 @@ export function LoginScreen() {
           style={styles.logo}
           accessibilityLabel="Briefly logo"
         />
-        <Text style={styles.appName}>
-          Meeting<Text style={{ color: colors.brand600 }}>Listener</Text>
-        </Text>
+        <Text style={styles.appName}>Briefly</Text>
 
         <Text style={styles.heading}>
           {mode === "login" ? "Welcome back" : "Create your account"}

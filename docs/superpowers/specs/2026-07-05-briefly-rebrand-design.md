@@ -22,7 +22,7 @@ Decisions made during brainstorming:
 | `frontend/index.html` | `<title>Briefly</title>` |
 | Sidebar `LogoMark` (AppLayout.tsx) | New mark SVG + wordmark "Briefly" + tagline "Meetings, briefly." |
 | Login page brand panel | "Briefly" wordmark, tagline copy, navy→blue gradient backdrop |
-| Desktop `package.json` | `productName: "Briefly"`; window/About name follows; **`appId` UNCHANGED** (`com.hdmauto.meetinglistener`) so installed apps upgrade in place |
+| Desktop `package.json` | `productName: "Briefly"`; window/About name follows; **`appId` UNCHANGED** (`app.meetinglistener.desktop`) so installed apps upgrade in place |
 | Desktop artifacts | `Briefly-0.2.0-universal.dmg`, `Briefly Setup 0.2.0.exe` |
 | Mobile `app.json` | Display `name: "Briefly"`; slug/bundle identifiers unchanged |
 | Download page (backend `src/downloads/`) | Title/headings "Briefly", dark hero section using the provided logo render, installer list reflects new filenames |
