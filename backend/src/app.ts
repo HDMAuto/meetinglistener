@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import cors, { type CorsOptions } from "cors";
 import { allowedOrigins } from "./config/env.js";
+import { versionRouter } from "./version/version.routes.js";
 import { authRouter } from "./users/auth.routes.js";
 import { userRouter } from "./users/user.routes.js";
 import { meetingRouter } from "./meetings/meeting.routes.js";
@@ -32,6 +33,8 @@ export function createApp(): Express {
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });
   });
+
+  app.use("/version", versionRouter);
 
   app.use("/auth", authRouter);
   app.use("/users", userRouter);
