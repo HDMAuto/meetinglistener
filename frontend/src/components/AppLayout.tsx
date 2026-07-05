@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { initials } from "../lib/format";
 import { cn } from "./ui";
 import { CommandPalette } from "./CommandPalette";
+import { UpdateBanner } from "./UpdateBanner";
 
 function LogoMark() {
   return (
@@ -172,6 +173,7 @@ export function AppLayout() {
       </aside>
 
       <main className="flex-1 overflow-y-auto">
+        <UpdateBanner />
         <Outlet />
       </main>
 

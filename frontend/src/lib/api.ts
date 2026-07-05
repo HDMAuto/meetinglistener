@@ -119,4 +119,7 @@ export const api = {
   listNotifications: () => request<Notification[]>("/notifications"),
   markNotificationRead: (id: string) =>
     request<Notification>(`/notifications/${id}/read`, { method: "POST" }),
+
+  // App version
+  getLatestVersion: () => request<{ latest: string | null }>("/version"),
 };
