@@ -14,7 +14,9 @@ export interface TeamWithMembers {
 }
 
 // Only active members appear in payloads; deactivated users stay in the join
-// table (history) but are invisible everywhere.
+// table (history) but are invisible everywhere. Because clients only ever see
+// active members, `updateTeam` must merge in existing inactive members before
+// replacing the set below — otherwise every edit would silently drop them.
 const activeMembers = {
   where: { isActive: true },
   select: { id: true, name: true, email: true },
@@ -64,12 +66,26 @@ export async function updateTeam(
   if (patch.memberIds !== undefined && !(await memberIdsValid(patch.memberIds))) {
     throw new Error("INVALID_MEMBERS");
   }
+  let memberIdsForSet: string[] | undefined;
+  if (patch.memberIds !== undefined) {
+    // The client only ever sends ACTIVE member ids (payloads filter out
+    // inactive users), so `set` here must be scoped to the active set only.
+    // Preserve existing inactive members so they aren't silently dropped from
+    // the join table — if they're later reactivated they should still belong.
+    const inactiveExisting = await prisma.user.findMany({
+      where: { isActive: false, teams: { some: { id } } },
+      select: { id: true },
+    });
+    memberIdsForSet = [
+      ...new Set([...patch.memberIds, ...inactiveExisting.map((u) => u.id)]),
+    ];
+  }
   const team = await prisma.team.update({
     where: { id },
     data: {
       ...(patch.name !== undefined ? { name: patch.name } : {}),
-      ...(patch.memberIds !== undefined
-        ? { members: { set: [...new Set(patch.memberIds)].map((mid) => ({ id: mid })) } }
+      ...(memberIdsForSet !== undefined
+        ? { members: { set: memberIdsForSet.map((mid) => ({ id: mid })) } }
         : {}),
     },
     include: { members: activeMembers },

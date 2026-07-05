@@ -99,4 +99,16 @@ describe("team-scoped auto-assignment", () => {
     expect(task.assigneeId).toBeNull();
     expect(task.status).toBe("needs_assignee");
   });
+
+  it("a team with zero active members flags every task for review", async () => {
+    const teamId = await makeTeam([sarah.id]);
+    await prisma.user.update({ where: { id: sarah.id }, data: { isActive: false } });
+    const meetingId = await makeMeeting(teamId);
+
+    await createTasksFromAnalysis(meetingId, analysisWith("Sarah", "high"));
+
+    const task = await prisma.task.findFirstOrThrow({ where: { meetingId } });
+    expect(task.assigneeId).toBeNull();
+    expect(task.status).toBe("needs_assignee");
+  });
 });

@@ -121,6 +121,32 @@ describe("team routes", () => {
     expect(emptyPatch.status).toBe(400);
   });
 
+  it("keeps deactivated members through edits and restores them on reactivation", async () => {
+    const created = await request(app)
+      .post("/teams")
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({ name: "Keepers", memberIds: [sarah.id, bob.id] });
+    const teamId = created.body.id as string;
+
+    await prisma.user.update({ where: { id: sarah.id }, data: { isActive: false } });
+
+    // Rename with the member list the UI would send (active members only).
+    const patched = await request(app)
+      .patch(`/teams/${teamId}`)
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({ name: "Keepers 2", memberIds: [bob.id] });
+    expect(patched.status).toBe(200);
+    expect(patched.body.members.map((m: { id: string }) => m.id)).toEqual([bob.id]);
+
+    await prisma.user.update({ where: { id: sarah.id }, data: { isActive: true } });
+
+    const list = await request(app)
+      .get("/teams")
+      .set("Authorization", `Bearer ${owner.token}`);
+    const team = list.body.find((t: { id: string }) => t.id === teamId);
+    expect(team.members.map((m: { id: string }) => m.id).sort()).toEqual([bob.id, sarah.id].sort());
+  });
+
   it("DELETE removes the team and nulls teamId on referencing meetings", async () => {
     const created = await request(app)
       .post("/teams")
