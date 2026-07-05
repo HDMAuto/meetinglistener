@@ -4,6 +4,6 @@ dist
 *.db-journal
 .env
 .env.test
-uploads
-uploads-test
-downloads
+/uploads
+/uploads-test
+/downloads

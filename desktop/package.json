@@ -2,7 +2,7 @@
   "name": "meetinglistener-desktop",
   "version": "0.2.0",
   "private": true,
-  "description": "MeetingListener desktop app (Electron shell around the web dashboard)",
+  "description": "Briefly desktop app (Electron shell around the web dashboard)",
   "main": "dist/main.js",
   "scripts": {
     "build:main": "tsc",
@@ -20,8 +20,14 @@
   "build": {
     "appId": "app.meetinglistener.desktop",
     "productName": "Briefly",
-    "files": ["dist/**", "renderer/**", "package.json"],
-    "directories": { "output": "release" },
+    "files": [
+      "dist/**",
+      "renderer/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg",
@@ -29,6 +35,8 @@
         "NSMicrophoneUsageDescription": "Briefly records meeting audio so it can transcribe and summarize your meetings."
       }
     },
-    "win": { "target": "nsis" }
+    "win": {
+      "target": "nsis"
+    }
   }
 }
