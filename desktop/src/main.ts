@@ -11,7 +11,7 @@ async function createWindow(): Promise<void> {
     height: 820,
     minWidth: 960,
     minHeight: 640,
-    title: "MeetingListener",
+    title: "Briefly",
     backgroundColor: "#f8fafc",
     show: false,
     webPreferences: {

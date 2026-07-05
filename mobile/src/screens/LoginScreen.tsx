@@ -55,7 +55,7 @@ export function LoginScreen() {
         <Image
           source={require("../../assets/icon.png")}
           style={styles.logo}
-          accessibilityLabel="MeetingListener logo"
+          accessibilityLabel="Briefly logo"
         />
         <Text style={styles.appName}>
           Meeting<Text style={{ color: colors.brand600 }}>Listener</Text>

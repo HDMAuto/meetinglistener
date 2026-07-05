@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MeetingListener",
+    "name": "Briefly",
     "slug": "meetinglistener",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -22,7 +22,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "MeetingListener records meeting audio so it can transcribe and summarize your meetings."
+          "microphonePermission": "Briefly records meeting audio so it can transcribe and summarize your meetings."
         }
       ],
       "expo-font"
