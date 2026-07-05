@@ -15,16 +15,20 @@ beforeEach(async () => {
 
 describe("admin user endpoints", () => {
   it("blocks non-admins from every admin endpoint", async () => {
-    const gets = await request(app)
-      .get("/users/all")
-      .set("Authorization", `Bearer ${member.token}`);
-    expect(gets.status).toBe(403);
-
-    const posts = await request(app)
-      .post("/users")
-      .set("Authorization", `Bearer ${member.token}`)
-      .send({ name: "X", email: "x@adm.test", role: "member", tempPassword: "temp123" });
-    expect(posts.status).toBe(403);
+    const cases: Array<[string, string]> = [
+      ["get", "/users/all"],
+      ["post", "/users"],
+      ["patch", `/users/${admin.id}`],
+      ["post", `/users/${admin.id}/deactivate`],
+      ["post", `/users/${admin.id}/reactivate`],
+      ["post", `/users/${admin.id}/reset-password`],
+    ];
+    for (const [method, path] of cases) {
+      const res = await (request(app) as any)[method](path)
+        .set("Authorization", `Bearer ${member.token}`)
+        .send({});
+      expect(res.status, `${method} ${path}`).toBe(403);
+    }
   });
 
   it("GET /users hides deactivated users; GET /users/all shows them", async () => {

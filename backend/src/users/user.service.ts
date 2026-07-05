@@ -57,8 +57,13 @@ export async function listAllUsers(): Promise<PublicUser[]> {
 }
 
 // Throws LAST_ADMIN if no OTHER active admin exists besides targetId.
-async function assertNotLastActiveAdmin(targetId: string): Promise<void> {
-  const others = await prisma.user.count({
+// Accepts a Prisma client/transaction client so callers can run the count
+// and the subsequent update atomically.
+async function assertNotLastActiveAdmin(
+  db: Pick<typeof prisma, "user">,
+  targetId: string,
+): Promise<void> {
+  const others = await db.user.count({
     where: { role: "admin", isActive: true, NOT: { id: targetId } },
   });
   if (others === 0) throw new Error("LAST_ADMIN");
@@ -96,7 +101,13 @@ export async function adminUpdateUser(
     if (existing) throw new Error("EMAIL_TAKEN");
   }
   if (patch.role === "member" && target.role === "admin" && target.isActive) {
-    await assertNotLastActiveAdmin(id);
+    // Count-then-update guard must be atomic: run both inside one transaction
+    // so a concurrent demote/deactivate can't slip through between them.
+    const user = await prisma.$transaction(async (tx) => {
+      await assertNotLastActiveAdmin(tx, id);
+      return tx.user.update({ where: { id }, data: patch });
+    });
+    return toPublicUser(user);
   }
   const user = await prisma.user.update({ where: { id }, data: patch });
   return toPublicUser(user);
@@ -107,7 +118,13 @@ export async function setUserActive(id: string, active: boolean): Promise<Public
   const target = await prisma.user.findUnique({ where: { id } });
   if (!target) return null;
   if (!active && target.role === "admin" && target.isActive) {
-    await assertNotLastActiveAdmin(id);
+    // Count-then-update guard must be atomic: run both inside one transaction
+    // so a concurrent demote/deactivate can't slip through between them.
+    const user = await prisma.$transaction(async (tx) => {
+      await assertNotLastActiveAdmin(tx, id);
+      return tx.user.update({ where: { id }, data: { isActive: active } });
+    });
+    return toPublicUser(user);
   }
   const user = await prisma.user.update({ where: { id }, data: { isActive: active } });
   return toPublicUser(user);
