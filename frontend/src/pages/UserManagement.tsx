@@ -88,9 +88,10 @@ export function UserManagement() {
   const [resetting, setResetting] = useState<ManagedUser | null>(null);
   const [confirmToggle, setConfirmToggle] = useState<ManagedUser | null>(null);
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading, isError, refetch } = useQuery({
     queryKey: ["allUsers"],
     queryFn: api.listAllUsers,
+    enabled: me?.role === "admin",
   });
 
   if (me?.role !== "admin") return <Navigate to="/" replace />;
@@ -119,7 +120,14 @@ export function UserManagement() {
       </header>
 
       <Card className="mt-6 overflow-hidden">
-        {isLoading ? (
+        {isError ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <p className="text-sm text-muted">Couldn't load users.</p>
+            <Button variant="outline" onClick={() => refetch()}>
+              Try again
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner className="h-6 w-6 text-brand-500" />
           </div>

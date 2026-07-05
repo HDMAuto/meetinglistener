@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api, setToken } from "../lib/api";
 import type { User } from "../lib/types";
 
@@ -20,6 +21,7 @@ function loadUser(): User | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(loadUser());
+  const queryClient = useQueryClient();
 
   function persist(u: User, token: string) {
     setToken(token);
@@ -36,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     localStorage.removeItem(USER_KEY);
     setUser(null);
+    queryClient.clear();
   };
 
   // Patch the in-memory + persisted user (e.g. clearing mustChangePassword

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { MeetingStatusBadge, TaskStatusBadge } from "./StatusBadge";
-import { cn, Spinner } from "./ui";
+import { cn, Spinner, useFocusTrap } from "./ui";
 
 // Must match backend/src/search/search.service.ts HIGHLIGHT_START/END.
 const HL_START = "\u0001";
@@ -130,6 +130,8 @@ export function CommandPalette({
     setSelected(0);
   }, [results]);
 
+  const trapRef = useFocusTrap(open);
+
   function go(meetingId: string) {
     onOpenChange(false);
     navigate(`/meetings/${meetingId}`);
@@ -165,6 +167,7 @@ export function CommandPalette({
         aria-hidden
       />
       <div
+        ref={trapRef}
         role="dialog"
         aria-modal="true"
         aria-label="Search"
