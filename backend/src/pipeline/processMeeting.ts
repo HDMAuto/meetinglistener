@@ -17,6 +17,11 @@ export async function processMeeting(meetingId: string): Promise<void> {
       where: { id: meetingId },
       data: { status: "summarizing", durationSec: transcription.durationSec },
     });
+
+    if (!transcription.speakerLabeledText.trim()) {
+      throw new Error("No speech was detected in the recording. Please record again and make sure your microphone is working.");
+    }
+
     const analysis = await analyzeTranscript(transcription.speakerLabeledText);
     await createTasksFromAnalysis(meetingId, analysis);
 

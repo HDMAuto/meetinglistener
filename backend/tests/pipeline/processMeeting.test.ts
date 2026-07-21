@@ -54,6 +54,25 @@ describe("processMeeting", () => {
     expect(tasks[0].assigneeId).toBe(owner.id);
   });
 
+  it("fails with a clear message and skips analysis when no speech is detected", async () => {
+    const { meetingId } = await meetingWithAudio();
+    transcribeMock.mockResolvedValue({
+      text: "",
+      speakerLabeledText: "   ",
+      utterances: [],
+      durationSec: 2,
+    });
+
+    await processMeeting(meetingId);
+
+    expect(analyzeMock).not.toHaveBeenCalled();
+    const m = await prisma.meeting.findUniqueOrThrow({ where: { id: meetingId } });
+    expect(m.status).toBe("failed");
+    expect(m.durationSec).toBe(2);
+    expect(m.errorMessage).toMatch(/no speech/i);
+    expect(m.errorMessage).not.toMatch(/invalid_request_error/);
+  });
+
   it("marks the meeting failed on a transcription error", async () => {
     const { meetingId } = await meetingWithAudio();
     transcribeMock.mockRejectedValue(new Error("bad audio"));
