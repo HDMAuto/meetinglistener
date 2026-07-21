@@ -149,6 +149,24 @@ describe("speaker routes", () => {
     expect(updated.status).toBe("needs_assignee");
   });
 
+  it("never reopens a completed task when its speaker is corrected", async () => {
+    const owner = await createTestUser({ email: "done@spk.com" });
+    const other = await createTestUser({ email: "done2@spk.com", name: "Someone Else" });
+    const meeting = await readyMeeting(owner.id);
+    const done = await speakerTask(meeting.id, "A", { assigneeId: owner.id, status: "done" });
+
+    await request(app)
+      .patch(`/meetings/${meeting.id}/speakers/A`)
+      .set("Authorization", `Bearer ${owner.token}`)
+      .send({ userId: other.id });
+
+    const still = await prisma.task.findUniqueOrThrow({ where: { id: done.id } });
+    expect(still.status).toBe("done");
+    expect(still.assigneeId).toBe(owner.id);
+    // No spurious notification for the resurrected assignee.
+    expect(await prisma.notification.count({ where: { userId: other.id } })).toBe(0);
+  });
+
   it("does not touch tasks that were manually detached from the speaker", async () => {
     const owner = await createTestUser({ email: "o7@spk.com" });
     const meeting = await readyMeeting(owner.id);

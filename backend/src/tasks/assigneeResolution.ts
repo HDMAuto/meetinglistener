@@ -11,12 +11,18 @@ export interface Resolution {
   status: "open" | "needs_assignee";
 }
 
+// A heard/guessed name matches a user when the full strings are equal or they
+// share a whole name token. Deliberately NOT substring-based: "me" must not
+// match "ja[me]s", and "Danielle" must not match "Dan" — those false single
+// matches would auto-assign a task to the wrong person and notify them.
 export function matches(userName: string, target: string): boolean {
   const n = userName.trim().toLowerCase();
   const t = target.trim().toLowerCase();
   if (!t) return false;
-  const first = n.split(/\s+/)[0];
-  return n === t || first === t || n.includes(t) || t.includes(first);
+  if (n === t) return true;
+  const nameTokens = n.split(/\s+/).filter(Boolean);
+  const targetTokens = t.split(/\s+/).filter(Boolean);
+  return nameTokens.some((nt) => targetTokens.includes(nt));
 }
 
 export function resolveAssignee(

@@ -23,8 +23,8 @@ speakerRouter.get(
 // free-text guest, or clear it. Exactly one field may be provided.
 const patchSchema = z
   .object({
-    userId: z.string().min(1).optional(),
-    guestName: z.string().trim().min(1).optional(),
+    userId: z.string().min(1).max(64).optional(),
+    guestName: z.string().trim().min(1).max(120).optional(),
     clear: z.literal(true).optional(),
   })
   .refine(
@@ -38,6 +38,9 @@ speakerRouter.patch(
   asyncHandler(async (req, res) => {
     const meeting = await getMeeting(req.params.id, req.userId!);
     if (!meeting) return res.status(404).json({ error: "NOT_FOUND" });
+
+    // Diarization labels are short ("A", "B", …); reject anything unbounded.
+    if (req.params.label.length > 16) return res.status(400).json({ error: "INVALID_LABEL" });
 
     const parsed = patchSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "INVALID_BODY" });

@@ -40,6 +40,25 @@ describe("resolveAssignee", () => {
     expect(r.status).toBe("needs_assignee");
     expect(r.suggestedAssigneeIds).toEqual([]);
   });
+
+  it("does not match a self-reference pronoun buried inside a name", () => {
+    // "me" is a substring of "jaMEs" but must not resolve to James Ng.
+    const r = resolveAssignee("me", "high", [{ id: "u_james", name: "James Ng" }]);
+    expect(r.assigneeId).toBeNull();
+    expect(r.suggestedAssigneeIds).toEqual([]);
+  });
+
+  it("does not match an external name that merely contains a first name", () => {
+    // "Danielle" contains "Dan" but is a different person.
+    const r = resolveAssignee("Danielle", "high", [{ id: "u_dan", name: "Dan Kim" }]);
+    expect(r.assigneeId).toBeNull();
+    expect(r.suggestedAssigneeIds).toEqual([]);
+  });
+
+  it("still matches on a shared last name", () => {
+    const r = resolveAssignee("Kim", "high", users);
+    expect(r.assigneeId).toBe("u_sarah");
+  });
 });
 
 describe("resolveViaSpeaker", () => {

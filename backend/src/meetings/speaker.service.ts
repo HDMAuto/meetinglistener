@@ -36,7 +36,9 @@ export function resolveSpeakerUser(name: string | null, candidates: Candidate[])
   return found.length === 1 ? found[0].id : null;
 }
 
-// Persist Claude's per-speaker identity guesses as unconfirmed mappings.
+// Persist Claude's per-speaker identity guesses as unconfirmed mappings. If a
+// meeting is re-processed, a mapping the owner already confirmed is left
+// untouched — a new machine guess must not silently overwrite a human decision.
 export async function createMeetingSpeakers(
   meetingId: string,
   speakers: SpeakerGuess[],
@@ -44,6 +46,13 @@ export async function createMeetingSpeakers(
 ): Promise<MeetingSpeaker[]> {
   const rows: MeetingSpeaker[] = [];
   for (const s of speakers) {
+    const existing = await prisma.meetingSpeaker.findUnique({
+      where: { meetingId_label: { meetingId, label: s.label } },
+    });
+    if (existing?.confirmed) {
+      rows.push(existing);
+      continue;
+    }
     const userId = resolveSpeakerUser(s.name, candidates);
     const row = await prisma.meetingSpeaker.upsert({
       where: { meetingId_label: { meetingId, label: s.label } },
@@ -91,7 +100,7 @@ export async function getMeetingSpeakers(
   ]);
 
   const segments = ((transcript?.segments as unknown as Utterance[] | null) ?? []).filter(
-    (u) => u && typeof u.speaker === "string",
+    (u) => u && typeof u.speaker === "string" && typeof u.text === "string",
   );
 
   // First-appearance order from the transcript, then any label-only rows.
@@ -135,7 +144,11 @@ export async function setMeetingSpeaker(
     update: { userId, guestName, confidence: "high", confirmed: true },
   });
 
-  const tasks = await prisma.task.findMany({ where: { meetingId, assigneeSpeakerLabel: label } });
+  // Never disturb completed work: re-resolution only touches live tasks, so
+  // correcting/clearing a speaker can't reopen a done task or re-notify.
+  const tasks = await prisma.task.findMany({
+    where: { meetingId, assigneeSpeakerLabel: label, status: { not: "done" } },
+  });
   for (const t of tasks) {
     if (userId) {
       if (t.assigneeId !== userId) {

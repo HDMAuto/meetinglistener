@@ -352,16 +352,14 @@ function SpeakersCard({
 
 function StatusPill({ speaker }: { speaker: SpeakerView }) {
   const identified = speaker.userId || speaker.guestName;
-  const cls = speaker.confirmed
-    ? "bg-emerald-100 text-emerald-700"
-    : identified
-      ? "bg-amber-100 text-amber-700"
-      : "bg-slate-100 text-slate-500";
-  const label = speaker.confirmed
-    ? "Confirmed"
-    : identified
-      ? "Guessed"
-      : "Needs review";
+  // No identity (unmapped, or explicitly "Not identified") always reads as
+  // needs-review — a green "Confirmed" pill next to a nameless speaker is a lie.
+  const cls = !identified
+    ? "bg-slate-100 text-slate-500"
+    : speaker.confirmed
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-amber-100 text-amber-700";
+  const label = !identified ? "Needs review" : speaker.confirmed ? "Confirmed" : "Guessed";
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", cls)}>{label}</span>
   );
@@ -424,7 +422,7 @@ function SpeakerRow({
               <span className="truncate text-sm font-semibold text-ink">{speaker.displayName}</span>
               <StatusPill speaker={speaker} />
             </div>
-            {speaker.userId === null && speaker.guestName === null && (
+            {(speaker.userId || speaker.guestName) && (
               <span className="text-xs text-muted">Speaker {speaker.label}</span>
             )}
           </div>
@@ -477,6 +475,11 @@ function SpeakerRow({
       {speaker.quotes.length > 0 && (
         <p className="mt-2 line-clamp-2 pl-[42px] text-xs italic text-slate-500">
           “{speaker.quotes[0]}”
+        </p>
+      )}
+      {update.isError && (
+        <p className="mt-2 pl-[42px] text-xs font-medium text-red-600">
+          Couldn’t update this speaker. Please try again.
         </p>
       )}
     </div>
