@@ -85,6 +85,8 @@ export interface Task {
 export interface Utterance {
   speaker: string;
   text: string;
+  start?: number;
+  end?: number;
 }
 
 export interface Transcript {
@@ -93,6 +95,21 @@ export interface Transcript {
   fullText: string;
   segments: Utterance[] | null;
   createdAt: string;
+}
+
+export interface SpeakerView {
+  label: string;
+  userId: string | null;
+  guestName: string | null;
+  displayName: string;
+  confidence: "high" | "low" | "unknown";
+  confirmed: boolean;
+  quotes: string[];
+}
+
+export interface MeetingSpeakers {
+  speakers: SpeakerView[];
+  candidates: { id: string; name: string }[];
 }
 
 export interface Notification {

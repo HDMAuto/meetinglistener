@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { MeetingWithTeam, Task, User } from "../lib/types";
+import type { MeetingSpeakers, MeetingWithTeam, SpeakerView, Task, User } from "../lib/types";
 import { STATUS_LABEL, formatDateTime, formatDuration, initials, isProcessing } from "../lib/format";
 import { MeetingStatusBadge, TaskStatusBadge } from "../components/StatusBadge";
 import { Button, Card, Modal, Spinner, cn } from "../components/ui";
@@ -201,10 +201,15 @@ function ReadyState({ meeting }: { meeting: MeetingWithTeam }) {
     queryKey: ["transcript", meeting.id],
     queryFn: () => api.getTranscript(meeting.id).catch(() => null),
   });
+  const { data: speakerData } = useQuery({
+    queryKey: ["speakers", meeting.id],
+    queryFn: () => api.getSpeakers(meeting.id).catch(() => null),
+  });
   const { data: users } = useQuery({ queryKey: ["users"], queryFn: api.listUsers });
 
   const needsReview = tasks?.filter((t) => t.status === "needs_assignee").length ?? 0;
   const teamMemberIds = new Set(meeting.team?.members.map((m) => m.id) ?? []);
+  const speakerByLabel = new Map((speakerData?.speakers ?? []).map((s) => [s.label, s]));
 
   return (
     <div className="mt-8 space-y-6">
@@ -263,24 +268,220 @@ function ReadyState({ meeting }: { meeting: MeetingWithTeam }) {
         </div>
       </Card>
 
+      {/* Speakers */}
+      {speakerData && speakerData.speakers.length > 0 && (
+        <SpeakersCard
+          meetingId={meeting.id}
+          speakers={speakerData.speakers}
+          candidates={speakerData.candidates}
+        />
+      )}
+
       {/* Notes / transcript */}
       <Card className="p-6">
         <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Notes · Transcript</h2>
         {transcript ? (
           <div className="mt-3 max-h-96 overflow-y-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
             {transcript.segments && transcript.segments.length > 0
-              ? transcript.segments.map((u, i) => (
-                  <p key={i} className="mb-2">
-                    <span className="font-semibold text-brand-700">Speaker {u.speaker}:</span>{" "}
-                    {u.text}
-                  </p>
-                ))
+              ? transcript.segments.map((u, i) => {
+                  const sp = speakerByLabel.get(u.speaker);
+                  return (
+                    <p key={i} className="mb-2">
+                      <span className={cn("font-semibold", speakerColor(u.speaker).name)}>
+                        {sp?.displayName ?? `Speaker ${u.speaker}`}:
+                      </span>{" "}
+                      {u.text}
+                    </p>
+                  );
+                })
               : transcript.fullText}
           </div>
         ) : (
           <p className="mt-3 text-sm text-muted">No transcript available.</p>
         )}
       </Card>
+    </div>
+  );
+}
+
+// Stable per-speaker accent so a speaker reads the same colour in the card and
+// the transcript. AssemblyAI emits sequential letters (A, B, C…).
+const SPEAKER_COLORS = [
+  { chip: "bg-brand-100 text-brand-700", name: "text-brand-700" },
+  { chip: "bg-violet-100 text-violet-700", name: "text-violet-700" },
+  { chip: "bg-emerald-100 text-emerald-700", name: "text-emerald-700" },
+  { chip: "bg-amber-100 text-amber-700", name: "text-amber-700" },
+  { chip: "bg-rose-100 text-rose-700", name: "text-rose-700" },
+  { chip: "bg-cyan-100 text-cyan-700", name: "text-cyan-700" },
+] as const;
+
+function speakerColor(label: string): (typeof SPEAKER_COLORS)[number] {
+  let hash = 0;
+  for (let i = 0; i < label.length; i++) hash = label.charCodeAt(i) + hash * 31;
+  return SPEAKER_COLORS[Math.abs(hash) % SPEAKER_COLORS.length];
+}
+
+const GUEST = "__guest__";
+const CLEAR = "__clear__";
+
+function SpeakersCard({
+  meetingId,
+  speakers,
+  candidates,
+}: {
+  meetingId: string;
+  speakers: SpeakerView[];
+  candidates: MeetingSpeakers["candidates"];
+}) {
+  return (
+    <Card className="p-6">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+        Speakers ({speakers.length})
+      </h2>
+      <p className="mt-1 text-xs text-muted">
+        Confirm who each speaker is — corrections update the transcript and any tasks assigned to them.
+      </p>
+      <div className="mt-4 space-y-2.5">
+        {speakers.map((s) => (
+          <SpeakerRow key={s.label} meetingId={meetingId} speaker={s} candidates={candidates} />
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function StatusPill({ speaker }: { speaker: SpeakerView }) {
+  const identified = speaker.userId || speaker.guestName;
+  // No identity (unmapped, or explicitly "Not identified") always reads as
+  // needs-review — a green "Confirmed" pill next to a nameless speaker is a lie.
+  const cls = !identified
+    ? "bg-slate-100 text-slate-500"
+    : speaker.confirmed
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-amber-100 text-amber-700";
+  const label = !identified ? "Needs review" : speaker.confirmed ? "Confirmed" : "Guessed";
+  return (
+    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", cls)}>{label}</span>
+  );
+}
+
+function SpeakerRow({
+  meetingId,
+  speaker,
+  candidates,
+}: {
+  meetingId: string;
+  speaker: SpeakerView;
+  candidates: MeetingSpeakers["candidates"];
+}) {
+  const qc = useQueryClient();
+  const [guestMode, setGuestMode] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const color = speakerColor(speaker.label);
+
+  const update = useMutation({
+    mutationFn: (body: { userId: string } | { guestName: string } | { clear: true }) =>
+      api.updateSpeaker(meetingId, speaker.label, body),
+    onSuccess: (data) => {
+      qc.setQueryData(["speakers", meetingId], data);
+      qc.invalidateQueries({ queryKey: ["tasks", meetingId] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      setGuestMode(false);
+      setGuestName("");
+    },
+  });
+
+  const onSelect = (value: string) => {
+    if (!value) return;
+    if (value === GUEST) {
+      setGuestName(speaker.guestName ?? "");
+      setGuestMode(true);
+    } else if (value === CLEAR) {
+      update.mutate({ clear: true });
+    } else {
+      update.mutate({ userId: value });
+    }
+  };
+
+  const chipText = speaker.userId || speaker.guestName ? initials(speaker.displayName) : speaker.label;
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+              color.chip,
+            )}
+          >
+            {chipText}
+          </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="truncate text-sm font-semibold text-ink">{speaker.displayName}</span>
+              <StatusPill speaker={speaker} />
+            </div>
+            {(speaker.userId || speaker.guestName) && (
+              <span className="text-xs text-muted">Speaker {speaker.label}</span>
+            )}
+          </div>
+        </div>
+
+        {guestMode ? (
+          <form
+            className="flex shrink-0 items-center gap-1.5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (guestName.trim()) update.mutate({ guestName: guestName.trim() });
+            }}
+          >
+            <input
+              autoFocus
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="Guest name"
+              className="w-36 rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            />
+            <Button type="submit" disabled={!guestName.trim()} loading={update.isPending}>
+              Save
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setGuestMode(false)}>
+              Cancel
+            </Button>
+          </form>
+        ) : (
+          <select
+            value=""
+            onChange={(e) => onSelect(e.target.value)}
+            disabled={update.isPending}
+            aria-label={`Set who Speaker ${speaker.label} is`}
+            className="shrink-0 cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm transition-colors hover:border-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          >
+            <option value="">Change…</option>
+            <optgroup label="People">
+              {candidates.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
+            <option value={GUEST}>＋ Guest…</option>
+            {(speaker.userId || speaker.guestName) && <option value={CLEAR}>Not identified</option>}
+          </select>
+        )}
+      </div>
+
+      {speaker.quotes.length > 0 && (
+        <p className="mt-2 line-clamp-2 pl-[42px] text-xs italic text-slate-500">
+          “{speaker.quotes[0]}”
+        </p>
+      )}
+      {update.isError && (
+        <p className="mt-2 pl-[42px] text-xs font-medium text-red-600">
+          Couldn’t update this speaker. Please try again.
+        </p>
+      )}
     </div>
   );
 }

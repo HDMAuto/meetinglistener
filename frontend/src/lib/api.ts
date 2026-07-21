@@ -2,6 +2,7 @@ import type {
   AuthResponse,
   ManagedUser,
   Meeting,
+  MeetingSpeakers,
   MeetingWithTeam,
   Notification,
   SearchResults,
@@ -86,6 +87,16 @@ export const api = {
       body: JSON.stringify(teamId ? { title, teamId } : { title }),
     }),
   getTranscript: (id: string) => request<Transcript>(`/meetings/${id}/transcript`),
+  getSpeakers: (id: string) => request<MeetingSpeakers>(`/meetings/${id}/speakers`),
+  updateSpeaker: (
+    id: string,
+    label: string,
+    body: { userId: string } | { guestName: string } | { clear: true },
+  ) =>
+    request<MeetingSpeakers>(`/meetings/${id}/speakers/${encodeURIComponent(label)}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
   deleteMeeting: (id: string) => request<void>(`/meetings/${id}`, { method: "DELETE" }),
   uploadAudio: (id: string, file: Blob, filename: string) => {
     const form = new FormData();
