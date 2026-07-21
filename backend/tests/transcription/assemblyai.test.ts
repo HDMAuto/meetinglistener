@@ -21,8 +21,8 @@ describe("transcribeAudio", () => {
           text: "Hello everyone. Let's start.",
           audio_duration: 42,
           utterances: [
-            { speaker: "A", text: "Hello everyone." },
-            { speaker: "B", text: "Let's start." },
+            { speaker: "A", text: "Hello everyone.", start: 100, end: 1500 },
+            { speaker: "B", text: "Let's start.", start: 1600, end: 2400 },
           ],
         }),
       });
@@ -33,6 +33,9 @@ describe("transcribeAudio", () => {
     expect(result.text).toContain("Hello everyone");
     expect(result.speakerLabeledText).toContain("Speaker A: Hello everyone.");
     expect(result.speakerLabeledText).toContain("Speaker B: Let's start.");
+    // Per-utterance timestamps are preserved for later snippet playback / voiceprints.
+    expect(result.utterances[0]).toMatchObject({ speaker: "A", start: 100, end: 1500 });
+    expect(result.utterances[1]).toMatchObject({ speaker: "B", start: 1600, end: 2400 });
 
     vi.unstubAllGlobals();
   });

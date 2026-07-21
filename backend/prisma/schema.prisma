@@ -21,6 +21,7 @@ model User {
   createdAt     DateTime       @default(now())
   meetings      Meeting[]
   assignedTasks Task[]         @relation("TaskAssignee")
+  speakerLabels MeetingSpeaker[]
   notifications Notification[]
 }
 
@@ -37,6 +38,7 @@ model Meeting {
   errorMessage String?
   transcript   Transcript?
   tasks        Task[]
+  speakers     MeetingSpeaker[]
   createdAt    DateTime     @default(now())
   teamId       String?
   team         Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
@@ -79,6 +81,7 @@ model Task {
   assigneeId           String?
   assignee             User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
   assigneeText         String?
+  assigneeSpeakerLabel String?
   suggestedAssigneeIds String[]
   status               String    @default("needs_assignee")
   notifiedAt           DateTime?
@@ -99,5 +102,22 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  @@index([userId])
+}
+
+model MeetingSpeaker {
+  id         String   @id @default(cuid())
+  meetingId  String
+  meeting    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  label      String   // diarization label as emitted by AssemblyAI: "A", "B", ...
+  userId     String?  // resolved app user (null for guest / unknown)
+  user       User?    @relation(fields: [userId], references: [id])
+  guestName  String?  // free-text name when the speaker is not an app user
+  confidence String   @default("unknown") // Claude's guess confidence: high | low | unknown
+  confirmed  Boolean  @default(false)     // owner explicitly confirmed / corrected
+  createdAt  DateTime @default(now())
+
+  @@unique([meetingId, label])
+  @@index([meetingId])
   @@index([userId])
 }

@@ -7,6 +7,8 @@ const BASE = "https://api.assemblyai.com/v2";
 export interface Utterance {
   speaker: string;
   text: string;
+  start: number; // ms offset into the recording (from AssemblyAI)
+  end: number; // ms
 }
 
 export interface TranscriptionResult {
@@ -52,11 +54,16 @@ export async function transcribeAudio(storedPath: string): Promise<Transcription
       text?: string;
       error?: string;
       audio_duration?: number;
-      utterances?: Utterance[];
+      utterances?: Array<{ speaker: string; text: string; start?: number; end?: number }>;
     };
 
     if (t.status === "completed") {
-      const utterances = t.utterances ?? [];
+      const utterances: Utterance[] = (t.utterances ?? []).map((u) => ({
+        speaker: u.speaker,
+        text: u.text,
+        start: u.start ?? 0,
+        end: u.end ?? 0,
+      }));
       const speakerLabeledText = utterances.length
         ? utterances.map((u) => `Speaker ${u.speaker}: ${u.text}`).join("\n")
         : (t.text ?? "");

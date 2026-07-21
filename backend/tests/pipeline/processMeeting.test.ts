@@ -31,13 +31,21 @@ describe("processMeeting", () => {
     transcribeMock.mockResolvedValue({
       text: "full text",
       speakerLabeledText: "Speaker A: hi",
-      utterances: [{ speaker: "A", text: "hi" }],
+      utterances: [{ speaker: "A", text: "hi", start: 0, end: 500 }],
       durationSec: 30,
     });
     analyzeMock.mockResolvedValue({
       goal: "Plan launch",
       summary: "Summary here",
-      tasks: [{ description: "Draft PR", assignee: "Sarah", assigneeConfidence: "high" }],
+      speakers: [{ label: "A", name: "Sarah", confidence: "high" }],
+      tasks: [
+        {
+          description: "Draft PR",
+          assignee: "Sarah",
+          assigneeConfidence: "high",
+          assigneeSpeakerLabel: null,
+        },
+      ],
     });
 
     await processMeeting(meetingId);
@@ -52,6 +60,43 @@ describe("processMeeting", () => {
 
     const tasks = await prisma.task.findMany({ where: { meetingId } });
     expect(tasks[0].assigneeId).toBe(owner.id);
+
+    // Claude's speaker guess is persisted, resolved to the app user, unconfirmed.
+    const speakers = await prisma.meetingSpeaker.findMany({ where: { meetingId } });
+    expect(speakers).toHaveLength(1);
+    expect(speakers[0]).toMatchObject({ label: "A", userId: owner.id, confirmed: false });
+  });
+
+  it("auto-assigns a self-referential task via the speaker's identity", async () => {
+    const { owner, meetingId } = await meetingWithAudio();
+    transcribeMock.mockResolvedValue({
+      text: "I'll take it",
+      speakerLabeledText: "Speaker A: I'll take the deck",
+      utterances: [{ speaker: "A", text: "I'll take the deck", start: 0, end: 900 }],
+      durationSec: 20,
+    });
+    // Heard assignee "me" would never match a user name; only the speaker
+    // identity resolves it.
+    analyzeMock.mockResolvedValue({
+      goal: "g",
+      summary: "s",
+      speakers: [{ label: "A", name: "Sarah Kim", confidence: "high" }],
+      tasks: [
+        {
+          description: "Own the deck",
+          assignee: "me",
+          assigneeConfidence: "high",
+          assigneeSpeakerLabel: "A",
+        },
+      ],
+    });
+
+    await processMeeting(meetingId);
+
+    const tasks = await prisma.task.findMany({ where: { meetingId } });
+    expect(tasks[0].assigneeId).toBe(owner.id);
+    expect(tasks[0].status).toBe("open");
+    expect(tasks[0].assigneeSpeakerLabel).toBe("A");
   });
 
   it("fails with a clear message and skips analysis when no speech is detected", async () => {
